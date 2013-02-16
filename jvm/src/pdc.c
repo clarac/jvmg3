@@ -45,7 +45,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
+#include <fpfunc.h>
 
 
 char pool[13][30];			// vetor de strings, guarda nomes das tags nos seus indices correspondentes (inicializada na funcao main)
@@ -57,54 +57,42 @@ struct item{				// estrutura que guarda valor de um item do pool de constantes
 	unsigned int name_index, class_index, name_and_type_index, descriptor_index, length, string_index, bytes,
 	high_bytes, low_bytes;
 	char *string;			// ponteiro para char, alocado durante a leitura para permitir um tamanho variavel
-	
+	char *name, *descriptor, *class;
+	struct item *name_and_type;
+};
+
+struct attribute{
+	unsigned int name_i, length;
+	char *info, *name;
+};
+
+struct field{
+	unsigned int aflags, name_i, descriptor_i, a_count;
+	struct attribute **atts;
+	char *name, *descriptor;
 };
 
 
-/*
-*	funcao que transforma um par de chars (bytes)
-*	em um u2 (unsigned short, 16 bits)
-*	param 	a1	byte de maior significancia
-*	param	a2	byte de menor significancia
-*
-*	retorna unsigned short (u2)
-*/
 
-unsigned short tou2(char a1, char a2){
-	unsigned short r, r2;
-	r2=a2;
-	r2&=0xFF;	// r2 = a2, com primeiro byte zerado
-	r=a1;
-	r<<=8;		// r = a1 no byte 1
-	r|=r2;		// r = a1 no byte um ou (mais) a2 no byte 0
-	return r;
-}
+struct method{
+	unsigned int aflags, name_i, descriptor_i, a_count;
+	struct attribute **atts;
+	char *name, *descriptor;
+};
 
 
-/*
-*	funcao que transforma quatro chars (bytes)
-*	em um u4 (unsigned int, 32 bits)
-*	param 	a1	byte de maior significancia (3)
-*	param	a2	byte intermediario (2)
-*	param 	a3	byte intermediario (1)
-*	param	a2	de menor significancia (0)
-*
-*	retorna unsigned int (u4)
-*
-*/
 
-unsigned int tou4(char a1, char a2, char a3, char a4){
-	unsigned short s1, s2;
-	unsigned int r, r2;
-	s1=tou2(a1,a2);	// s1 = a1 no byte 1, a2 no byte 0
-	s2=tou2(a3,a4);	// s2 = a3 no byte 1, a4 no byte 0
-	r2=s2;
-	r2&=0xFFFF;	// r2 = s2, com dois primeiros bytes zerados
-	r=s1;		
-	r<<=16;		// r = s1 nos bytes 2 e 3
-	r|=r2;		// r = a1 a2 a3 a4
-	return r;
-}
+struct class{
+	unsigned int minor_v, major_v, cpc, aflags, this_c, super_c, i_count, f_count, m_count, a_count;
+	struct item **cpool;
+	struct field **fields;
+	struct method **methods;
+	struct attribute **atts;
+	unsigned int *interfaces;
+	char *name;
+	struct class *super;
+};
+
 
 /*
 *	funcao que le um u4 de um arquivo e o retorna
@@ -145,6 +133,7 @@ unsigned int pru4(FILE *bc){
 *	
 *	param	bc	ponteiro para o arquivo fonte
 *	param	max	valor maximo para o valor lido (nao incluindo o proprio)
+*			(se max = 0, considera que nao ha valor maximo)
 *
 *	retorna u2 dos 2 proximos bytes do arquivo (big-endian)
 *	retorna 0 se o arquivo acabar antes de ler 2 bytes ou
@@ -207,7 +196,7 @@ struct item * getN(int n, struct item **pdc){
 
 int printItems(struct item **pdc, int tam){
 
-	struct item *atual, *aux, *aux2, **paux;
+	struct item *atual, *aux,**paux;
 	int i, tag;
 	unsigned int ui;
 
@@ -231,10 +220,7 @@ int printItems(struct item **pdc, int tam){
 			case 7: //CONSTANT_Class
 
 				printf("name_index : %d ",atual->name_index);	// indice do nome
-
-				aux=getN(atual->name_index,pdc);		// busca item do nome a partir do indice
-				printf("(%s)\n",aux->string);			// imprime nome
-
+				printf("(%s)\n",atual->name);			// imprime nome
 				break;
 
 			case 9: //CONSTANT_Fieldref
@@ -243,42 +229,44 @@ int printItems(struct item **pdc, int tam){
 
 				ui=atual->class_index;
 				printf("class_index : %u ", ui);		// indice da classe
-
-				aux=getN(ui,pdc);				// busca item da classe
-
-				aux2=getN(aux->name_index,pdc);		// busca nome da classe
-
-
-				printf("(%s)\n",aux2->string);			// imprime nome da classe
+				printf("(%s)\n",atual->class);			// imprime nome da classe
 
 				printf("name_and_type_index : %u ",atual->name_and_type_index); // indice de nome e tipo
-				aux=getN(atual->name_and_type_index, pdc);	// busca item de nome e tipo
+				aux=atual->name_and_type;	// busca item de nome e tipo
 
-				aux2=getN(aux->name_index, pdc);		// busca item do nome
-				printf("(%s,",aux2->string);			// imprime nome
-
-				aux2=getN(aux->descriptor_index, pdc);		// busca item do tipo
-				printf(" %s)\n",aux2->string);			// imprime tipo
+				printf("(%s,",aux->name);			// imprime nome
+				printf(" %s)\n",aux->descriptor);			// imprime tipo
 
 				break;
 
 			case 8: //CONSTANT_String
 				printf("string_index : %d ",atual->string_index);// indice da string
-
-				aux=getN(atual->string_index,pdc);		// busca item da string
-				printf("(%s)\n",aux->string);			// imprime string
+				printf("(%s)\n",atual->string);			// imprime string
 
 				break;
 
 			case 3: //CONSTANT_Integer
+				printf("bytes : 0x%X\n",atual->bytes);		// imprime valor em hexadecimal
+				printf("int value : %d\n",atual->bytes); // valor int
+				break;
+
 			case 4: //CONSTANT_Float
 				printf("bytes : 0x%X\n",atual->bytes);		// imprime valor em hexadecimal
+				printf("float value : %.3f\n",toFloat(atual->bytes)); // valor float
 				break;
 
 			case 5: //CONSTANT_Long
+				printf("high_bytes : 0x%X\n",atual->high_bytes);// imprime valor alto em hexadecimal
+				printf("low_bytes : 0x%X\n",atual->low_bytes);	// imprime valor baixo em hexadecimal
+				i++;
+				paux++;
+				break;
+
 			case 6: //CONSTANT_Double
 				printf("high_bytes : 0x%X\n",atual->high_bytes);// imprime valor alto em hexadecimal
 				printf("low_bytes : 0x%X\n",atual->low_bytes);	// imprime valor baixo em hexadecimal
+				double d=toDouble(atual->high_bytes,atual->low_bytes);
+				printf("double value : %.3f\n",d); // valor double
 				i++;
 				paux++;
 				break;
@@ -286,13 +274,10 @@ int printItems(struct item **pdc, int tam){
 			case 12: //CONSTANT_NameAndType
 
 				printf("name_index : %d ",atual->name_index);	// imprime indice do nome
-				aux=getN(atual->name_index,pdc);		// busca item do nome
-				printf("(%s)\n",aux->string);			// imprime nome
-
+				printf("(%s)\n",atual->name);			// imprime nome
 
 				printf("descriptor_index : %d ",atual->descriptor_index); //indice do descritor
-				aux=getN(atual->descriptor_index,pdc);		// busca item do descritor
-				printf("(%s)\n",aux->string);			// imprime descritor
+				printf("(%s)\n",atual->descriptor);			// imprime descritor
 				break;
 
 			case 1: //CONSTANT_Utf8
@@ -303,8 +288,177 @@ int printItems(struct item **pdc, int tam){
 		printf("\n");
 
 	}
-
+	return 0;
 }
+
+void setStrings(struct item **pdc, int tam){
+
+	struct item *atual, *aux, *aux2, **paux;
+	int i, tag;
+	paux=pdc;							// iterator para o vetor
+
+	for(i=1;i<tam;i++,paux++){			// percorre enquanto nao chegou ao final
+
+		atual=*paux;					// pega proximo item
+
+		tag = (int) atual->tag;
+
+		switch(tag){
+			case 7: //CONSTANT_Class
+				atual->name=getN(atual->name_index,pdc)->string;
+				break;
+
+			case 9: //CONSTANT_Fieldref
+			case 10: //CONSTANT_Methodref
+			case 11: //CONSTANT_InterfaceMethodref
+				aux=getN(atual->class_index,pdc);
+				aux2=getN(aux->name_index,pdc);
+				atual->class=aux2->string;
+
+				atual->name_and_type=getN(atual->name_and_type_index, pdc);
+				break;
+
+			case 8: //CONSTANT_String
+				aux=getN(atual->string_index,pdc);
+				atual->string=aux->string;
+				break;
+
+			case 3:
+			case 4:
+				break;
+
+			case 5: //CONSTANT_Long
+			case 6: //CONSTANT_Double
+				i++;
+				paux++;
+				break;
+
+			case 12: //CONSTANT_NameAndType
+				aux=getN(atual->name_index,pdc);
+				atual->name=aux->string;
+
+				aux=getN(atual->descriptor_index,pdc);
+				atual->descriptor=aux->string;
+				break;
+
+			case 1: //CONSTANT_Utf8
+				break;
+		}
+	}
+}
+
+void printAtts(unsigned int count, struct attribute ** atts){
+	int j,k;
+	struct attribute *att;
+	char *str;
+	for(j=0;j<count;j++,atts++){
+		att=*atts;
+
+		printf(">>>attribute #%d : %u (%s)\n",j,att->name_i,att->name);
+		printf(">>>attribute_length : %u\n",att->length);
+		printf(">>>info : ");
+		str=att->info;
+		for(k=0;k<att->length;k++,str++){
+			printf("%X ",*str);
+		}
+		printf("\n");
+	}
+}
+
+struct attribute ** readAtts(unsigned int count, FILE * bc, unsigned int cpc, struct item ** pdc){
+	struct attribute **atts, *att, **first;
+	char *str, lido;
+	unsigned int j,k;
+	if(count==0)
+		return NULL;
+	atts=calloc(count, sizeof(struct attribute *));
+	first=atts;
+	for(j=0;j<count;j++){
+		att=malloc(sizeof(struct attribute));
+		*atts=att;
+		atts++;
+
+		att->name_i=pru2(bc,cpc);
+		att->name=getN(att->name_i,pdc)->string;
+		att->length=pru4(bc);
+
+		if(att->length>0){
+			att->info=calloc(att->length+1,sizeof(char));
+			str=att->info;
+		}
+		for(k=0;k<att->length;k++){
+			fscanf(bc,"%c",&lido);
+			*str=lido;
+			str++;
+		}
+		*str='\0';
+	}
+	return first;
+}
+
+void printFields(unsigned int count, struct field ** fds){
+	int i;
+	struct field *fd;
+	for(i=0;i<count;i++, fds++){
+		fd=*fds;
+		printf(">field #%d\n",i);
+		printf(">>access_flags : %u\n",fd->aflags);
+		printf(">>name_index : %u (%s)\n",fd->name_i,fd->name);
+		printf(">>descriptor_index : %u (%s)\n",fd->descriptor_i,fd->descriptor);
+		printf(">>attributes_count : %u\n",fd->a_count);
+
+		printAtts(fd->a_count,fd->atts);
+
+	}
+}
+
+void printMethods(unsigned int count, struct method ** mtds){
+	int i;
+	struct method *mtd;
+	for(i=0;i<count;i++, mtds++){
+		mtd=*mtds;
+		printf(">method #%d\n",i);
+		printf(">>access_flags : %u\n",mtd->aflags);
+
+		printf(">>name_index : %u (%s)\n",mtd->name_i,mtd->name);
+
+		printf(">>descriptor_index : %u (%s)\n",mtd->descriptor_i,mtd->descriptor);
+		printf(">>attributes_count : %u\n",mtd->a_count);
+
+		printAtts(mtd->a_count,mtd->atts);
+
+	}
+}
+
+void printClass(struct class * thisc){
+	unsigned int i, *it;
+	printf("minor_version : %u\n",thisc->minor_v);
+	printf("major_version : %u\n",thisc->major_v);
+	printf("constant_pool_count : %u\n\n",thisc->cpc);
+	printf("access_flags : 0x%X\n",thisc->aflags);
+	printf("this_class : %u (%s)\n",thisc->this_c, thisc->name);
+	printf("super_class : %u (-)\n",thisc->super_c);
+
+	printItems(thisc->cpool, thisc->cpc);
+
+
+	printf("interfaces_count : %u\n",thisc->i_count);
+
+	it=thisc->interfaces;
+
+	for(i=0;i<thisc->i_count;i++,it++){
+		printf(">interface #%d : %u",i,*it);
+	}
+
+	printf("fields_count : %u\n",thisc->f_count);
+	printFields(thisc->f_count,thisc->fields);
+
+	printf("methods_count : %u\n",thisc->m_count);
+	printMethods(thisc->m_count,thisc->methods);
+	printf("attributes_count : %u\n",thisc->a_count);
+	printAtts(thisc->a_count,thisc->atts);
+}
+
 
 /*
 *	funcao principal
@@ -326,10 +480,14 @@ int main(int argc, char *argv[]){
 
 	FILE *bc;						// arquivo .class
 	struct item *atual;
-	unsigned int cpc, aux1, aux2,i,j, tag;
+	unsigned int cpc, aux1, aux2, aux3,i,j,k, tag, *it;
 	int s;
 	char lido, stc[4],*cpt;
 	struct item **pdc, **paux;
+	struct class *thisc = malloc(sizeof(struct class));
+	struct attribute *att, **atts;
+	struct field *fd, **fds;
+	struct method *mtd, **mtds;
 
 	strcpy(pool[0],"");					// preenche vetor de strings com os
 	strcpy(pool[1],"CONSTANT_Utf8");			// tipos de constantes considerados
@@ -369,23 +527,20 @@ int main(int argc, char *argv[]){
 
 	printf("O numero magico eh 0xCAFEBABE\n");		// estah ok, pode ler
 
-	aux1=pru2(bc,0);
-	printf("minor_version : %u\n",aux1);			// le propriedades gerais
-	aux1=pru2(bc,0);
-	printf("major_version : %u\n",aux1);			// e imprime na tela
-	cpc=(unsigned int)pru2(bc,0);
-	printf("constant_pool_count : %u\n\n",cpc);
+	thisc->minor_v=pru2(bc,0);
+	thisc->major_v=pru2(bc,0);
+	thisc->cpc = cpc=pru2(bc,0);
 
 	atual=NULL;
-
 	pdc=calloc(cpc-1,sizeof(pdc));					// aloca espaco para vetor de itens
 	paux=pdc;										// de tamanho cpc-1
+
+	thisc->cpool = pdc;
+
 	if(pdc==NULL){
 		printf("OOM error!\n");
 		return 1;
 	}
-
-
 
 	for(i=1;i<cpc;i++){					// percorre pool de constantes
 		s=fscanf(bc,"%c",&lido);
@@ -487,12 +642,72 @@ int main(int argc, char *argv[]){
 
 
 	}
-	
-	// ignora o restante do arquivo
+	setStrings(thisc->cpool, thisc->cpc);
+
+	thisc->super=NULL;
+
+	thisc->aflags=pru2(bc,0);
+	thisc->this_c=pru2(bc,0);
+	thisc->super_c=pru2(bc,cpc);
+	thisc->i_count=pru2(bc,0);
+	thisc->name=getN(thisc->this_c,thisc->cpool);
+	it=calloc(thisc->i_count, sizeof(unsigned int));
+
+	thisc->interfaces=it;
+
+	for(i=0;i<thisc->i_count;i++ ,it++){
+		*it=pru2(bc,0);
+	}
+
+	thisc->f_count=pru2(bc,0);
+	thisc->fields=NULL;
+
+	if(thisc->f_count>0){
+		fds=calloc(thisc->f_count,sizeof(struct field *));
+		thisc->fields=fds;
+	}
 
 
+	for(i=0;i<thisc->f_count;i++){
+		fd=malloc(sizeof(struct field));
+		*fds=fd;
+		fds++;
 
-	printItems(pdc, cpc);
+		fd->aflags=pru2(bc,0);
+		fd->name_i=pru2(bc,cpc);
+		fd->name=getN(fd->name_i,pdc)->string;
+		fd->descriptor_i=pru2(bc,cpc);
+		fd->descriptor=getN(fd->descriptor_i,pdc)->string;
+		fd->a_count=pru2(bc,0);
+		fd->atts=readAtts(fd->a_count,bc,thisc->cpc,thisc->cpool);
+	}
+
+	thisc->m_count=pru2(bc,0);
+
+	if(thisc->m_count>0){
+		mtds=calloc(thisc->m_count, sizeof(struct method *));
+		thisc->methods=mtds;
+	}
+
+	for(i=0;i<thisc->m_count;i++){
+		//method info
+		mtd=malloc(sizeof(struct method));
+		*mtds=mtd;
+		mtds++;
+
+		mtd->aflags=pru2(bc,0);
+		mtd->name_i=pru2(bc,0);
+		mtd->name=getN(mtd->name_i,pdc)->string;
+		mtd->descriptor_i=pru2(bc,0);
+		mtd->descriptor=getN(mtd->descriptor_i,pdc)->string;
+		mtd->a_count=pru2(bc,0);
+		mtd->atts=readAtts(mtd->a_count,bc,thisc->cpc,thisc->cpool);
+	}
+	thisc->a_count=pru2(bc,0);
+	thisc->atts=readAtts(thisc->a_count,bc,thisc->cpc,thisc->cpool);
+
+
+	printClass(thisc);
 
 	fclose(bc);
 	return 0;
