@@ -4,16 +4,16 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../src/fpfunc.c \
-../src/pdc.c 
+../src/pdc.c \
+../src/util.c 
 
 OBJS += \
-./src/fpfunc.o \
-./src/pdc.o 
+./src/pdc.o \
+./src/util.o 
 
 C_DEPS += \
-./src/fpfunc.d \
-./src/pdc.d 
+./src/pdc.d \
+./src/util.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

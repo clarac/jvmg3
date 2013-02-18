@@ -1,3 +1,5 @@
-src/pdc.d: ../src/pdc.c ../src/fpfunc.h
+src/pdc.d: ../src/pdc.c ../src/util.h ../src/tipos.h
 
-../src/fpfunc.h:
+../src/util.h:
+
+../src/tipos.h:

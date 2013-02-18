@@ -1,98 +1,25 @@
-/*
-* 0826685 - Pool de Constantes
-* 
-*  Programa que recebe um arquivo .class como parametro
-* verifica se o seu numero magico (4 primeiros bytes) eh 0xCAFEBABE,
-* imprime o valor de minor_version, major_version, e
-* de constant_pool_count e le e imprime os valores lidos 
-* da pool de constantes, ignorando o resto do arquivo
-*
-* termina a operacao se o numero magico nao bater, se encontrar uma
-* tag desconhecida (menor do que 1, maior do que 12 ou igual a 2)
-* ou se tiver problemas ao abrir o arquivo classe
-*
-* para compilar:
-*
-* 	gcc -o pdc pdc.c
-*
-* recebe o arquivo .classe:
-*
-* 	./pdc Hw.class
-*
-* escrito e executado no Ubuntu 12.10 32 bit
-* gcc 4.6.1 
-*
-*
-* imprime constantes de tag: 
-*
-* CONSTANT_Class = 7
-* CONSTANT_Fieldref = 9
-* CONSTANT_Methodref = 10
-* CONSTANT_InterfaceMethodref = 11
-* CONSTANT_String = 8
-* CONSTANT_Integer = 3
-* CONSTANT_Float = 4
-* CONSTANT_Long = 5
-* CONSTANT_Double = 6
-* CONSTANT_NameAndType = 12
-* CONSTANT_Utf8 = 1
-*
-* e suas propriedades correspondentes
-* 
-*/
+
 
 
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <fpfunc.h>
+#include <util.h>
+#include <tipos.h>
 
-
-char pool[13][30];			// vetor de strings, guarda nomes das tags nos seus indices correspondentes (inicializada na funcao main)
-
-
-
-struct item{				// estrutura que guarda valor de um item do pool de constantes
-	unsigned int tag, index;
-	unsigned int name_index, class_index, name_and_type_index, descriptor_index, length, string_index, bytes,
-	high_bytes, low_bytes;
-	char *string;			// ponteiro para char, alocado durante a leitura para permitir um tamanho variavel
-	char *name, *descriptor, *class;
-	struct item *name_and_type;
-};
-
-struct attribute{
-	unsigned int name_i, length;
-	char *info, *name;
-};
-
-struct field{
-	unsigned int aflags, name_i, descriptor_i, a_count;
-	struct attribute **atts;
-	char *name, *descriptor;
-};
+static char pool[13][30]={"","CONSTANT_Utf8","","CONSTANT_Integer","CONSTANT_Float",
+		"CONSTANT_Long","CONSTANT_Double","CONSTANT_Class","CONSTANT_String",
+		"CONSTANT_Fieldref","CONSTANT_Methodref","CONSTANT_InterfaceMethodref",
+		"CONSTANT_NameAndType"};			// vetor de strings, guarda nomes das tags nos seus indices correspondentes
 
 
 
-struct method{
-	unsigned int aflags, name_i, descriptor_i, a_count;
-	struct attribute **atts;
-	char *name, *descriptor;
-};
 
 
-
-struct class{
-	unsigned int minor_v, major_v, cpc, aflags, this_c, super_c, i_count, f_count, m_count, a_count;
-	struct item **cpool;
-	struct field **fields;
-	struct method **methods;
-	struct attribute **atts;
-	unsigned int *interfaces;
-	char *name;
-	struct class *super;
-};
-
+struct class **classes = NULL;
+int c_count=0;
+static char *root;
+char  *name;
 
 /*
 *	funcao que le um u4 de um arquivo e o retorna
@@ -156,7 +83,7 @@ unsigned int pru2(FILE *bc, unsigned int max){
 	if(max>0){
 		tm=(unsigned short) max;
 		if(ls==0 || ls>=tm){
-			printf("erro: indice fora de alcance\n");
+			//printf("erro: indice fora de alcance\n");
 			return 0;
 		}
 	}
@@ -293,15 +220,14 @@ int printItems(struct item **pdc, int tam){
 
 void setStrings(struct item **pdc, int tam){
 
-	struct item *atual, *aux, *aux2, **paux;
-	int i, tag;
-	paux=pdc;							// iterator para o vetor
+	struct item *atual, *aux, *aux2;
+	unsigned int i, tag;							// iterator para o vetor
 
-	for(i=1;i<tam;i++,paux++){			// percorre enquanto nao chegou ao final
+	for(i=1;i<tam;i++){			// percorre enquanto nao chegou ao final
 
-		atual=*paux;					// pega proximo item
+		atual=pdc[i-1];					// pega proximo item
 
-		tag = (int) atual->tag;
+		tag = atual->tag;
 
 		switch(tag){
 			case 7: //CONSTANT_Class
@@ -330,7 +256,6 @@ void setStrings(struct item **pdc, int tam){
 			case 5: //CONSTANT_Long
 			case 6: //CONSTANT_Double
 				i++;
-				paux++;
 				break;
 
 			case 12: //CONSTANT_NameAndType
@@ -391,7 +316,7 @@ struct attribute ** readAtts(unsigned int count, FILE * bc, unsigned int cpc, st
 			*str=lido;
 			str++;
 		}
-		*str='\0';
+		if(k>0) *str='\0';
 	}
 	return first;
 }
@@ -460,8 +385,27 @@ void printClass(struct class * thisc){
 }
 
 
+struct class * getClassByName(char * pathname){
+	int i;
+	struct class * thisc;
+	char *name = calloc(strlen(pathname),sizeof(char));
+	strcpy(name,pathname);
+	for(i=0;name[i]!='\0';i++){
+		if(name[i]=='.'){
+			name[i]='\0';
+			i--;
+		}
+	}
+	for(i=0;i<c_count;i++){
+		thisc=classes[i];
+		if(strcmp(thisc->name,name)==0){
+			return thisc;
+		}
+	}
+	return NULL;
+}
+
 /*
-*	funcao principal
 *	confere se o arquivo .class eh valido (CAFEBABE)	
 *	le do arquivo e imprime na tela:
 *		minor_version, major_version e constant_pool_count
@@ -476,56 +420,61 @@ void printClass(struct class * thisc){
 */
 
 
-int main(int argc, char *argv[]){
+struct class * getClass(char *pathname){
 
 	FILE *bc;						// arquivo .class
 	struct item *atual;
-	unsigned int cpc, aux1, aux2, aux3,i,j,k, tag, *it;
+	unsigned int cpc, aux1, aux2,i,j, tag, *it;
 	int s;
-	char lido, stc[4],*cpt;
-	struct item **pdc, **paux;
-	struct class *thisc = malloc(sizeof(struct class));
-	struct attribute *att, **atts;
+	char lido, stc[4],*cpt, *caminho;
+	struct item **pdc;
+	struct class *thisc;
 	struct field *fd, **fds;
 	struct method *mtd, **mtds;
 
-	strcpy(pool[0],"");					// preenche vetor de strings com os
-	strcpy(pool[1],"CONSTANT_Utf8");			// tipos de constantes considerados
-	strcpy(pool[2],"");
-	strcpy(pool[3],"CONSTANT_Integer");
-	strcpy(pool[4],"CONSTANT_Float");
-	strcpy(pool[5],"CONSTANT_Long");
-	strcpy(pool[6],"CONSTANT_Double");
-	strcpy(pool[7],"CONSTANT_Class");
-	strcpy(pool[8],"CONSTANT_String");
-	strcpy(pool[9],"CONSTANT_Fieldref");
-	strcpy(pool[10],"CONSTANT_Methodref");
-	strcpy(pool[11],"CONSTANT_InterfaceMethodref");
-	strcpy(pool[12],"CONSTANT_NameAndType");
 
-	if(argc<2){						// confere se foi fornecido o nome do .class
-		printf("Informe o arquivo .class\n");
-		return 1;
+	thisc=getClassByName(pathname);
+	if(thisc!=NULL)
+		return thisc;
+
+
+	for(i=0;pathname[i]!='\0';i++){
+		if(pathname[i]=='/')
+			pathname[i]='\\';
 	}
-	bc=fopen(argv[1],"rb");	
+
+	caminho=calloc(strlen(root)+strlen(pathname), sizeof(char));
+	strcpy(caminho,root);
+
+	strcat(caminho,pathname);
+	//printf("%s\n",caminho);
+
+	bc=fopen(caminho,"rb");
 
 	if(bc==0){
- 		printf("erro ao abrir o arquivo %s\n",argv[1]);	// confere se o arquivo foi aberto com sucesso
-		return 1;
+		printf("erro ao abrir o arquivo %s\n",caminho);	// confere se o arquivo foi aberto com sucesso
+		return NULL;
 	}
+
+	if(c_count%39==0)
+		i=0;
+	c_count++;
+	classes=realloc(classes,(c_count*sizeof(struct class *)));
+	thisc= malloc(sizeof(struct class));
+	classes[c_count-1]=thisc;
 
 	for(i=0;i<4;i++){
 		s=fscanf(bc,"%c",&stc[i]);			// le primeiro u4 (4 bytes)		
 		if(s==EOF)
-			return 1;
+			return NULL;
 	}
 	if(tou4(stc[0],stc[1],stc[2],stc[3]) != 0xCAFEBABE){	// confere se bate com CAFEBABE
 		printf("erro: arquivo invalido, nao bate com o numero magico 0xCAFEBABE\n");
 		fclose(bc);
-		return 1;
+		return NULL;
 	}
 
-	printf("O numero magico eh 0xCAFEBABE\n");		// estah ok, pode ler
+	//printf("O numero magico eh 0xCAFEBABE\n");		// estah ok, pode ler
 
 	thisc->minor_v=pru2(bc,0);
 	thisc->major_v=pru2(bc,0);
@@ -533,35 +482,35 @@ int main(int argc, char *argv[]){
 
 	atual=NULL;
 	pdc=calloc(cpc-1,sizeof(pdc));					// aloca espaco para vetor de itens
-	paux=pdc;										// de tamanho cpc-1
+											// de tamanho cpc-1
 
 	thisc->cpool = pdc;
 
 	if(pdc==NULL){
 		printf("OOM error!\n");
-		return 1;
+		return NULL;
 	}
 
 	for(i=1;i<cpc;i++){					// percorre pool de constantes
 		s=fscanf(bc,"%c",&lido);
 		if(s==EOF)
-			return 1;
+			return NULL;
 		tag = (int) lido;
 		if(tag<1 || tag>12 || tag==2){					// confere se a tag eh valida
 			printf("tag invalida e/ou desconhecida: %d\n cancelando leitura...\n",tag);
 			fclose(bc);
-			return 1;						// aborta se nao for
+			return NULL;						// aborta se nao for
 		}
 
 		atual=malloc(sizeof(struct item));			// aloca espaco para proximo item
 		if(atual==NULL){
 				printf("OOM error!\n");
-				return 1;
+				return NULL;
 		}
 
-
-		*paux=atual;					// escreve ponteiro para atual na posicao atual do vetor
-		paux++;							// passa para proxima posicao
+		thisc->cpool[i-1]=atual;
+		//*paux=atual;					// escreve ponteiro para atual na posicao atual do vetor
+		//paux++;							// passa para proxima posicao
 
 
 		atual->tag=(unsigned int) tag;
@@ -573,7 +522,7 @@ int main(int argc, char *argv[]){
 				atual->name_index=aux1;	
 
 				if(aux1==0)					//indice invalido ou EOF
-					return 1;
+					return NULL;
 				break;
 
 			case 9: //CONSTANT_Fieldref	
@@ -585,7 +534,7 @@ int main(int argc, char *argv[]){
 				atual->name_and_type_index=aux2;
 
 				if(aux1==0 || aux2==0)					//indice invalido ou EOF
-					return 1;
+					return NULL;
 
 				break;
 
@@ -594,7 +543,7 @@ int main(int argc, char *argv[]){
 				atual->string_index=aux1;	
 
 				if(aux1==0)					//indice invalido ou EOF
-					return 1;
+					return NULL;
 				break;
 
 			case 3: //CONSTANT_Integer
@@ -611,8 +560,7 @@ int main(int argc, char *argv[]){
 				atual->high_bytes=aux1;	
 				atual->low_bytes=aux2;	
 				i++;
-				*paux=NULL;
-				paux++;
+				thisc->cpool[i-1]=NULL;
 				break;
 
 			case 12: //CONSTANT_NameAndType
@@ -621,7 +569,7 @@ int main(int argc, char *argv[]){
 				atual->name_index=aux1;	
 				atual->descriptor_index=aux2;	
 				if(aux1==0 || aux2==0)					//indice invalido ou EOF
-					return 1;
+					return NULL;
 				break;
 
 			case 1: //CONSTANT_Utf8
@@ -630,13 +578,12 @@ int main(int argc, char *argv[]){
 				atual->string=calloc(aux1+1, sizeof(char));
 				cpt=atual->string;
 				if(cpt==NULL)					// falha para alocar
-					return 1;
+					return NULL;
 				for(j=0;j<aux1;j++){
 					fscanf(bc,"%c",&lido);
-					*cpt=lido;
-					cpt++;
+					cpt[j]=lido;
 				}
-				*cpt='\0';
+				cpt[j]='\0';
 				break;	
 		}
 
@@ -644,13 +591,19 @@ int main(int argc, char *argv[]){
 	}
 	setStrings(thisc->cpool, thisc->cpc);
 
-	thisc->super=NULL;
+
 
 	thisc->aflags=pru2(bc,0);
 	thisc->this_c=pru2(bc,0);
 	thisc->super_c=pru2(bc,cpc);
+
+	thisc->super=NULL;
+
+	if(thisc->super_c>0)
+		thisc->supername=getN(thisc->super_c,thisc->cpool)->name;
+
 	thisc->i_count=pru2(bc,0);
-	thisc->name=getN(thisc->this_c,thisc->cpool);
+	thisc->name=getN(thisc->this_c,thisc->cpool)->name;
 	it=calloc(thisc->i_count, sizeof(unsigned int));
 
 	thisc->interfaces=it;
@@ -670,8 +623,8 @@ int main(int argc, char *argv[]){
 
 	for(i=0;i<thisc->f_count;i++){
 		fd=malloc(sizeof(struct field));
-		*fds=fd;
-		fds++;
+		fds[i]=fd;
+		//fds++;
 
 		fd->aflags=pru2(bc,0);
 		fd->name_i=pru2(bc,cpc);
@@ -692,8 +645,8 @@ int main(int argc, char *argv[]){
 	for(i=0;i<thisc->m_count;i++){
 		//method info
 		mtd=malloc(sizeof(struct method));
-		*mtds=mtd;
-		mtds++;
+		mtds[i]=mtd;
+		//mtds++;
 
 		mtd->aflags=pru2(bc,0);
 		mtd->name_i=pru2(bc,0);
@@ -706,9 +659,61 @@ int main(int argc, char *argv[]){
 	thisc->a_count=pru2(bc,0);
 	thisc->atts=readAtts(thisc->a_count,bc,thisc->cpc,thisc->cpool);
 
-
-	printClass(thisc);
+	printf("carregou %s com sucesso\n",pathname);
+	//printClass(thisc);
 
 	fclose(bc);
+
+	if(thisc->super_c>0){
+		i=strlen(root)+ strlen(thisc->supername)+6;
+		if(i>500)
+			pathname=(char *)realloc(pathname,i);
+
+		strcpy(pathname,thisc->supername);
+		strcat(pathname,".class\0");
+		thisc->super=getClass(pathname);
+	}
+
+	return thisc;
+}
+
+int getRoot(char *path){
+	int i=0, max=0;
+	for(;path[i]!='\0';i++){
+		if(path[i]=='\\'){
+			max=i;
+		}
+	}
+	return max;
+
+}
+
+int main(int argc, char *argv[]){
+
+	int indice;
+	if(argc<2){						// confere se foi fornecido o nome do .class
+		printf("Informe o arquivo .class\n");
+		return 1;
+	}
+	indice=getRoot(argv[1]);
+	indice++;
+	name=argv[1];
+	root=calloc(indice+1,sizeof(char));
+	if(indice>1){
+		root=strncpy(root,name,indice);
+		root[indice]='\0';
+	}
+	else{
+		indice--;
+		root[0]='\0';
+	}
+	name=calloc(500+indice,sizeof(char));
+	strcpy(name,argv[1]);
+	name+=indice;
+
+	getClass(name);
+
+	printf("Total de %d classes carregadas\n",c_count);
 	return 0;
 }
+
