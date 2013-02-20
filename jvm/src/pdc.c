@@ -703,6 +703,7 @@ int main(int argc, char *argv[]){
 		root=strncpy(root,name,indice);
 		root[indice]='\0';
 	}
+	//TODO checar root de acordo com 1a classe, ajustar se necessário!
 	else{
 		indice--;
 		root[0]='\0';

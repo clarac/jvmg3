@@ -5,14 +5,17 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../src/pdc.c \
+../src/stack.c \
 ../src/util.c 
 
 OBJS += \
 ./src/pdc.o \
+./src/stack.o \
 ./src/util.o 
 
 C_DEPS += \
 ./src/pdc.d \
+./src/stack.d \
 ./src/util.d 
 
 
