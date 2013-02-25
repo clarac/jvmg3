@@ -1,3 +1,5 @@
+package bat.tre;
+
 
 class Hw{
     int b=39;

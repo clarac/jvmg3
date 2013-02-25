@@ -38,6 +38,7 @@ struct method{
 	unsigned int aflags, name_i, descriptor_i, a_count;
 	struct attribute **atts;
 	char *name, *descriptor;
+	struct attribute  *code;
 };
 
 

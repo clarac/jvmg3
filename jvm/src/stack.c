@@ -1,79 +1,94 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <stack.h>
 
-struct snode{
-	unsigned int valor;
-	struct snode *prox;
-};
-
-struct snode * pop(struct snode * topo){
+/**
+ * Funcao que retira item do topo e retorna seu valor
+ *
+ * return	valor do topo da pilha
+ *
+ */
+unsigned int pop(){
 	if(topo==NULL)
-		return NULL;
+		return 0;
 	struct snode * prox = topo->prox;
+	unsigned int valor = topo->valor;
 	free(topo);
-	return prox;
+	topo=prox;
+	return valor;
 }
 
-struct snode *  push(struct snode * topo, unsigned int valor){
+/*
+ * Funcao que insere um item no topo da pilha
+ *
+ * param	valor	u4 a ser inserido
+ *
+ */
+
+void  push(unsigned int valor){
 	struct snode *novo = calloc(1,sizeof(struct snode));
 	novo->valor=valor;
 	novo->prox=topo;
-	return novo;
+	topo=novo;
+	if(base==NULL)
+		base=topo;
 }
 
-struct snode * newFrame(struct snode * topo, struct snode * base){
-	struct snode *novo;
-	novo=push(topo, (unsigned int)base);
-	novo=push(novo, (unsigned int)topo);
+/*
+ * Funcao que cria um novo frame na pilha
+ *
+ */
 
-	return novo;
+void newFrame(){
+	push((unsigned int)base);
+	base=topo;
 }
 
-struct snode * dropFrame(struct snode * topo, struct snode * base){
+
+/*
+ * Funcao que remove o ultimo frame da pilha, liberando o espaco
+ *
+ */
+void dropFrame(){
 	struct snode * aux;
 	if(topo == NULL || base == NULL)
-		return NULL;
+		return;
 	while(topo!=NULL&&topo!=base){
-		aux=topo->prox;
-		free(topo);
-		topo=aux;
+		pop();
 	}
 	if(topo!=NULL){
-		aux=topo->prox;
-		free(topo);
-		topo=aux;
+		base=pop();
 	}
-	return topo;
+
 }
 
 int mainTeste(){
 	unsigned int i;
-	struct snode * topo=NULL,* base=NULL;
 
 
-	topo=push(topo,0);
-	base=topo;
+	push(0);
+
 	for(i=1;i<21;i++){
-		topo=push(topo,i);
+		push(i);
 	}
-	topo=newFrame(topo,base);
-	base=topo;
+	newFrame();
+
 
 	for(;i<50;i++){
-		topo=push(topo,i);
+		push(i);
 	}
 
-	topo=dropFrame(topo,base);
-	base=(struct snode *)topo->valor;
-	topo=pop(topo);
+	dropFrame();
+
 
 	printf("base: %X\n",(unsigned int)base);
 	while(topo!=NULL && topo!=base){
 		printf("%u\n",topo->valor);
 		printf("topo: %X\n",(unsigned int)topo);
-		topo=pop(topo);
+		pop();
 	}
-
+	printf("%u\n",topo->valor);
+	printf("topo: %X\n",(unsigned int)topo);
 	return 0;
 }
 

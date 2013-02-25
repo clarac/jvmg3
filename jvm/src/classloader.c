@@ -1,24 +1,11 @@
-
-
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <util.h>
 #include <tipos.h>
+#include <classloader.h>
+#include <stack.h>
 
-static char pool[13][30]={"","CONSTANT_Utf8","","CONSTANT_Integer","CONSTANT_Float",
-		"CONSTANT_Long","CONSTANT_Double","CONSTANT_Class","CONSTANT_String",
-		"CONSTANT_Fieldref","CONSTANT_Methodref","CONSTANT_InterfaceMethodref",
-		"CONSTANT_NameAndType"};			// vetor de strings, guarda nomes das tags nos seus indices correspondentes
-
-
-
-
-
-struct class **classes = NULL;
-int c_count=0;
-static char *root;
 char  *name;
 
 /*
@@ -28,7 +15,7 @@ char  *name;
 *	param	nome	nome do campo sendo lido (nao usado)
 *
 *	retorna u4 dos 4 proximos bytes do arquivo (big-endian)
-*	retorna 0 se o arquivo acabar antes de ler 4 bytes
+*	encerra com erro se o arquivo acabar antes de ler 4 bytes
 */
 
 unsigned int pru4(FILE *bc){
@@ -36,19 +23,19 @@ unsigned int pru4(FILE *bc){
 	int s;
 	s=fscanf(bc,"%c",&c1);
 	if(s==EOF)
-		return 0;
+		exit(EXIT_FAILURE);
 
 	s=fscanf(bc,"%c",&c2);
 	if(s==EOF)
-		return 0;
+		exit(EXIT_FAILURE);
 
 	s=fscanf(bc,"%c",&c3);
 	if(s==EOF)
-		return 0;
+		exit(EXIT_FAILURE);
 
 	s=fscanf(bc,"%c",&c4);
 	if(s==EOF)
-		return 0;
+		exit(EXIT_FAILURE);
 
 	unsigned int t = tou4(c1,c2,c3,c4);
 	//printf("%s : %u\n",nome,t);
@@ -63,7 +50,7 @@ unsigned int pru4(FILE *bc){
 *			(se max = 0, considera que nao ha valor maximo)
 *
 *	retorna u2 dos 2 proximos bytes do arquivo (big-endian)
-*	retorna 0 se o arquivo acabar antes de ler 2 bytes ou
+*	encerra com erro se o arquivo acabar antes de ler 2 bytes ou
 *		se o numero lido for invalido (zero ou >= max)
 */
 
@@ -73,18 +60,18 @@ unsigned int pru2(FILE *bc, unsigned int max){
 	int s;
 	s=fscanf(bc,"%c",&l1);
 	if(s==EOF)
-		return 0;
+		exit(EXIT_FAILURE);
 
 	s=fscanf(bc,"%c",&l2);
 	if(s==EOF)
-		return 0;
+		exit(EXIT_FAILURE);
 
 	ls=tou2(l1,l2);
 	if(max>0){
 		tm=(unsigned short) max;
 		if(ls==0 || ls>=tm){
-			//printf("erro: indice fora de alcance\n");
-			return 0;
+			printf("erro: indice fora de alcance\n");
+			exit(EXIT_FAILURE);
 		}
 	}
 
@@ -92,13 +79,13 @@ unsigned int pru2(FILE *bc, unsigned int max){
 }
 
 /*
-*	funcao que retorna o item de posicao n de uma colecao de itens
+*	funcao que retorna o item de posicao n de um array de itens
 *	assume que n eh um indice valido ( 1 <= n < tam da pdc)
 *	
 *	param	n	indice
 *	param	pdc	ponteiro para primeiro item
 *
-*	retorna o enesimo item da lista
+*	retorna o enesimo item do array
 *
 */
 
@@ -108,12 +95,12 @@ struct item * getN(int n, struct item **pdc){
 }
 
 /*
-*	funcao que imprime toda a colecao de itens
+*	funcao que imprime toda a colecao de itens da pool de constantes
 *	
 *	param	pdc		ponteiro para primeiro item
 *	param	tam		numero de itens, considerando que os de tipo long e double ocupam 2 posicoes
 *
-*	retorna 1 se houve problema
+*	encerra se houve problema
 *	retorna 0 se nao houve problema
 *
 *	assume que os indices gravados sao validos (checados durante a leitura do arquivo)
@@ -137,7 +124,7 @@ int printItems(struct item **pdc, int tam){
 
 		if(tag<1 || tag>12 || tag==2){					// confere se a tag eh valida
 			printf("tag invalida e/ou desconhecida: %d\n",tag);
-			return 1;						// aborta se nao for
+			exit(EXIT_FAILURE);						// aborta se nao for
 		}
 
 
@@ -218,6 +205,16 @@ int printItems(struct item **pdc, int tam){
 	return 0;
 }
 
+/*
+ * Funcao que preenche propriedades das structs pool de constantes
+ * com as strings correspondentes, apos o final da leitura de toda
+ * a pdc
+ *
+ * param	pdc		ponteiro para pool de constantes
+ * param 	tam		tamanho do pool de constantes
+ *
+ */
+
 void setStrings(struct item **pdc, int tam){
 
 	struct item *atual, *aux, *aux2;
@@ -272,6 +269,15 @@ void setStrings(struct item **pdc, int tam){
 	}
 }
 
+/*
+ * Funcao que imprime todos os atributos em um array
+ *
+ *
+ * param	count	tamanho (quantidade de atributos)
+ * param	atts	ponteiro para primeira posicao
+ */
+
+
 void printAtts(unsigned int count, struct attribute ** atts){
 	int j,k;
 	struct attribute *att;
@@ -290,7 +296,19 @@ void printAtts(unsigned int count, struct attribute ** atts){
 	}
 }
 
-struct attribute ** readAtts(unsigned int count, FILE * bc, unsigned int cpc, struct item ** pdc){
+/*
+ * Funcao que le atributos do arquivo .class
+ *
+ * param	count	quantidade de atributos
+ * param	bc		ponteiro para arquivo .class
+ * param	cpc		tanho do pool de constantes
+ * param	pdc		ponteiro para pool de constantes
+ *
+ * return	vetor de atributos lidos
+ *
+ */
+
+struct attribute ** readAtts(unsigned int count, FILE * bc, unsigned int cpc, struct item ** pdc, struct attribute **code){
 	struct attribute **atts, *att, **first;
 	char *str, lido;
 	unsigned int j,k;
@@ -305,6 +323,10 @@ struct attribute ** readAtts(unsigned int count, FILE * bc, unsigned int cpc, st
 
 		att->name_i=pru2(bc,cpc);
 		att->name=getN(att->name_i,pdc)->string;
+		if(code!=NULL && strcmp(att->name, "Code")==0){
+
+			*code=att;
+		}
 		att->length=pru4(bc);
 
 		if(att->length>0){
@@ -320,6 +342,14 @@ struct attribute ** readAtts(unsigned int count, FILE * bc, unsigned int cpc, st
 	}
 	return first;
 }
+
+/*
+ * Funcao que imprime um vetor de fields
+ *
+ * param	count	tamanho do vetor
+ * param	fds		ponteiro para vetor
+ *
+ */
 
 void printFields(unsigned int count, struct field ** fds){
 	int i;
@@ -337,8 +367,16 @@ void printFields(unsigned int count, struct field ** fds){
 	}
 }
 
+/*
+ * Funcao que imprime um vetor de metodos
+ *
+ * param	count	tamanho
+ * param	mtds	ponteiro para vetor
+ *
+ */
+
 void printMethods(unsigned int count, struct method ** mtds){
-	int i;
+	int i, k;
 	struct method *mtd;
 	for(i=0;i<count;i++, mtds++){
 		mtd=*mtds;
@@ -352,8 +390,24 @@ void printMethods(unsigned int count, struct method ** mtds){
 
 		printAtts(mtd->a_count,mtd->atts);
 
+		if(mtd->code!=NULL){
+			printf("Code : %d ;  ",mtd->code->length);
+			for(k=0;k<mtd->code->length;k++)
+				printf("%X ",mtd->code->info[k]);
+
+			printf("\n");
+		}
+
+
 	}
 }
+
+/*
+ * Funcao que imprime uma classe
+ *
+ * param	thisc	ponteiro para classe a imprimir
+ *
+ */
 
 void printClass(struct class * thisc){
 	unsigned int i, *it;
@@ -384,6 +438,14 @@ void printClass(struct class * thisc){
 	printAtts(thisc->a_count,thisc->atts);
 }
 
+/*
+ * Funcao que procura classe no vetor de classes carregadas
+ *
+ * param 	pathname	nome da classe, incluindo pacote
+ *
+ * return	ponteiro para classe se estiver carregada, NULL caso contrario
+ *
+ */
 
 struct class * getClassByName(char * pathname){
 	int i;
@@ -406,16 +468,21 @@ struct class * getClassByName(char * pathname){
 }
 
 /*
+*	Funcao que retorna ponteiro para classe
+*	Procura no vetor de classes carregadas, retorna ponteiro para
+*	classe se jah existir. Caso contrario,
 *	confere se o arquivo .class eh valido (CAFEBABE)	
-*	le do arquivo e imprime na tela:
-*		minor_version, major_version e constant_pool_count
-*	le pool de constantes e armazena em uma lista
-*	imprime os itens da pool de constantes na tela, na ordem de leitura
+*	le arquivo .class e armazena em struct, adicionando ao
+*	vetor de classes carregadas
 *
-*	encerra e retorna 1 se o arquivo for invalido (i.e., se encontrar
+*	param	pathname	nome da classe
+*
+*	return	ponteiro para classe carregada
+*
+*	encerra com erro se o arquivo for invalido (i.e., se encontrar
 *	indices de valor 0 ou >= constant_pool_count, se encontrar tags
 *	desconhecidas, se achar EOF antes do termino da leitura) ou se
-*	nao conseguir alocar memoria para guardar todas as constantes
+*	nao conseguir alocar memoria para guardar tudo o que precisar
 *
 */
 
@@ -443,7 +510,12 @@ struct class * getClass(char *pathname){
 			pathname[i]='\\';
 	}
 
+
+	printf("%d %d\n",strlen(root)+strlen(pathname), sizeof(char));
+	//return NULL;
 	caminho=calloc(strlen(root)+strlen(pathname), sizeof(char));
+	return NULL;
+
 	strcpy(caminho,root);
 
 	strcat(caminho,pathname);
@@ -466,12 +538,12 @@ struct class * getClass(char *pathname){
 	for(i=0;i<4;i++){
 		s=fscanf(bc,"%c",&stc[i]);			// le primeiro u4 (4 bytes)		
 		if(s==EOF)
-			return NULL;
+			exit(EXIT_FAILURE);
 	}
 	if(tou4(stc[0],stc[1],stc[2],stc[3]) != 0xCAFEBABE){	// confere se bate com CAFEBABE
 		printf("erro: arquivo invalido, nao bate com o numero magico 0xCAFEBABE\n");
 		fclose(bc);
-		return NULL;
+		exit(EXIT_FAILURE);
 	}
 
 	//printf("O numero magico eh 0xCAFEBABE\n");		// estah ok, pode ler
@@ -488,24 +560,24 @@ struct class * getClass(char *pathname){
 
 	if(pdc==NULL){
 		printf("OOM error!\n");
-		return NULL;
+		exit(EXIT_FAILURE);
 	}
 
 	for(i=1;i<cpc;i++){					// percorre pool de constantes
 		s=fscanf(bc,"%c",&lido);
 		if(s==EOF)
-			return NULL;
+			exit(EXIT_FAILURE);
 		tag = (int) lido;
 		if(tag<1 || tag>12 || tag==2){					// confere se a tag eh valida
 			printf("tag invalida e/ou desconhecida: %d\n cancelando leitura...\n",tag);
 			fclose(bc);
-			return NULL;						// aborta se nao for
+			exit(EXIT_FAILURE);						// aborta se nao for
 		}
 
 		atual=malloc(sizeof(struct item));			// aloca espaco para proximo item
 		if(atual==NULL){
 				printf("OOM error!\n");
-				return NULL;
+				exit(EXIT_FAILURE);
 		}
 
 		thisc->cpool[i-1]=atual;
@@ -522,7 +594,7 @@ struct class * getClass(char *pathname){
 				atual->name_index=aux1;	
 
 				if(aux1==0)					//indice invalido ou EOF
-					return NULL;
+					exit(EXIT_FAILURE);
 				break;
 
 			case 9: //CONSTANT_Fieldref	
@@ -534,7 +606,7 @@ struct class * getClass(char *pathname){
 				atual->name_and_type_index=aux2;
 
 				if(aux1==0 || aux2==0)					//indice invalido ou EOF
-					return NULL;
+					exit(EXIT_FAILURE);
 
 				break;
 
@@ -543,7 +615,7 @@ struct class * getClass(char *pathname){
 				atual->string_index=aux1;	
 
 				if(aux1==0)					//indice invalido ou EOF
-					return NULL;
+					exit(EXIT_FAILURE);
 				break;
 
 			case 3: //CONSTANT_Integer
@@ -578,9 +650,11 @@ struct class * getClass(char *pathname){
 				atual->string=calloc(aux1+1, sizeof(char));
 				cpt=atual->string;
 				if(cpt==NULL)					// falha para alocar
-					return NULL;
+					exit(EXIT_FAILURE);
 				for(j=0;j<aux1;j++){
-					fscanf(bc,"%c",&lido);
+					if(fscanf(bc,"%c",&lido)==EOF){
+						exit(EXIT_FAILURE);
+					}
 					cpt[j]=lido;
 				}
 				cpt[j]='\0';
@@ -595,7 +669,7 @@ struct class * getClass(char *pathname){
 
 	thisc->aflags=pru2(bc,0);
 	thisc->this_c=pru2(bc,0);
-	thisc->super_c=pru2(bc,cpc);
+	thisc->super_c=pru2(bc,0);
 
 	thisc->super=NULL;
 
@@ -632,7 +706,7 @@ struct class * getClass(char *pathname){
 		fd->descriptor_i=pru2(bc,cpc);
 		fd->descriptor=getN(fd->descriptor_i,pdc)->string;
 		fd->a_count=pru2(bc,0);
-		fd->atts=readAtts(fd->a_count,bc,thisc->cpc,thisc->cpool);
+		fd->atts=readAtts(fd->a_count,bc,thisc->cpc,thisc->cpool,NULL);
 	}
 
 	thisc->m_count=pru2(bc,0);
@@ -642,40 +716,57 @@ struct class * getClass(char *pathname){
 		thisc->methods=mtds;
 	}
 
+
 	for(i=0;i<thisc->m_count;i++){
 		//method info
 		mtd=malloc(sizeof(struct method));
 		mtds[i]=mtd;
 		//mtds++;
-
+		mtd->code=NULL;
 		mtd->aflags=pru2(bc,0);
 		mtd->name_i=pru2(bc,0);
 		mtd->name=getN(mtd->name_i,pdc)->string;
 		mtd->descriptor_i=pru2(bc,0);
 		mtd->descriptor=getN(mtd->descriptor_i,pdc)->string;
 		mtd->a_count=pru2(bc,0);
-		mtd->atts=readAtts(mtd->a_count,bc,thisc->cpc,thisc->cpool);
+		mtd->atts=readAtts(mtd->a_count,bc,thisc->cpc,thisc->cpool,&mtd->code);
+
 	}
 	thisc->a_count=pru2(bc,0);
-	thisc->atts=readAtts(thisc->a_count,bc,thisc->cpc,thisc->cpool);
+	thisc->atts=readAtts(thisc->a_count,bc,thisc->cpc,thisc->cpool,NULL);
 
 	printf("carregou %s com sucesso\n",pathname);
 	//printClass(thisc);
 
 	fclose(bc);
 
-	if(thisc->super_c>0){
+	if(c_count==1 ){//&& ((strlen(thisc->name)+6)>strlen(pathname))){
+		printf("oops\n");
+		//return NULL;
+		//fixRoot(strlen(thisc->name)-strlen(pathname));
+	}
+
+	if(thisc->super_c>98342){
 		i=strlen(root)+ strlen(thisc->supername)+6;
 		if(i>500)
 			pathname=(char *)realloc(pathname,i);
 
 		strcpy(pathname,thisc->supername);
 		strcat(pathname,".class\0");
+
 		thisc->super=getClass(pathname);
 	}
 
 	return thisc;
 }
+
+/*
+ * Funcao que extrai caminho base da classe carregada
+ *
+ * param	path	caminho passado como parametro
+ *
+ * return 	indice da ultima barra contraria encontrada
+ */
 
 int getRoot(char *path){
 	int i=0, max=0;
@@ -688,8 +779,14 @@ int getRoot(char *path){
 
 }
 
-int main(int argc, char *argv[]){
+/*
+ * Funcao principal
+ */
 
+int main(int argc, char *argv[]){
+	classes = NULL;
+	topo=NULL;
+	base=NULL;
 	int indice;
 	if(argc<2){						// confere se foi fornecido o nome do .class
 		printf("Informe o arquivo .class\n");
