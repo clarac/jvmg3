@@ -9,7 +9,7 @@
  *
  */
 unsigned int pop(){
-	if(topo==NULL)
+	if(topo==NULL || topo==base)
 		return 0;
 	struct snode * prox = topo->prox;
 	unsigned int valor = topo->valor;
@@ -30,8 +30,7 @@ void  push(unsigned int valor){
 	novo->valor=valor;
 	novo->prox=topo;
 	topo=novo;
-	if(base==NULL)
-		base=topo;
+
 }
 
 /*
@@ -40,8 +39,9 @@ void  push(unsigned int valor){
  */
 
 void newFrame(){
+	struct snode * aux = topo;
 	push((unsigned int)base);
-	base=topo;
+	base=aux;
 }
 
 
@@ -50,15 +50,13 @@ void newFrame(){
  *
  */
 void dropFrame(){
-	struct snode * aux;
-	if(topo == NULL || base == NULL)
+	unsigned int aux;
+	if(topo == NULL)
 		return;
 	while(topo!=NULL&&topo!=base){
-		pop();
+		aux= pop();
 	}
-	if(topo!=NULL){
-		base=pop();
-	}
+	base=(struct snode *)aux;
 
 }
 
@@ -78,7 +76,7 @@ int mainTeste(){
 		push(i);
 	}
 
-	dropFrame();
+	//dropFrame();
 
 
 	printf("base: %X\n",(unsigned int)base);
@@ -87,8 +85,7 @@ int mainTeste(){
 		printf("topo: %X\n",(unsigned int)topo);
 		pop();
 	}
-	printf("%u\n",topo->valor);
-	printf("topo: %X\n",(unsigned int)topo);
+
 	return 0;
 }
 

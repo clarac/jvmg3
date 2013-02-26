@@ -17,4 +17,9 @@ struct snode{
 	struct snode *prox;
 };
 
-static struct snode * topo, *base;
+static struct snode * topo=NULL, *base=NULL;
+
+unsigned int pop();
+void  push(unsigned int valor);
+void newFrame();
+void dropFrame();
