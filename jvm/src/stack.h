@@ -20,3 +20,5 @@ void newFrame();
 void dropFrame();
 double popDbl();
 void pushDbl(double a);
+unsigned int getLocalIndex(int index);
+void setLocalIndex(int index, int value);

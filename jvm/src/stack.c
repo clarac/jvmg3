@@ -63,10 +63,11 @@ void  push(unsigned int valor){
  *
  */
 
-void newFrame(){
-	struct snode * aux = topo;
-	push((unsigned int)base);
-	base=aux;
+void newFrame(unsigned int lv_size){
+	unsigned int * local = calloc(lv_size, sizeof(unsigned int));
+	push((unsigned int) base);
+	push((unsigned int) local);
+	base=topo;
 }
 
 
@@ -75,14 +76,45 @@ void newFrame(){
  *
  */
 void dropFrame(){
-	unsigned int aux;
+	unsigned int *local;
+
 	if(topo == NULL)
 		return;
 	while(topo!=NULL&&topo!=base){
-		aux= pop();
+		pop();
 	}
-	base=(struct snode *)aux;
+	struct snode * prox = topo->prox;
+	unsigned int valor = topo->valor;
+	free(topo);
+	topo=prox;
+	local=(struct snode *)valor;
 
+	free(local);
+
+	prox = topo->prox;
+	valor = topo->valor;
+	free(topo);
+	topo=prox;
+	base=(struct snode *)valor;
+
+}
+
+unsigned int getLocalIndex(int index){
+	if(base==NULL){
+		printf("Erro: array de variaveis locais inexistente. Retornando 0.\n");
+		return 0;
+	}
+	unsigned int *  local = (unsigned int *) base->valor;
+	return local[index];
+}
+
+void setLocalIndex(int index, int value){
+	if(base==NULL){
+		printf("Erro: array de variaveis locais inexistente.\n");
+		return;
+	}
+	unsigned int *  local = (unsigned int *) base->valor;
+	local[index]=value;
 }
 
 int mainTeste(){
@@ -94,9 +126,10 @@ int mainTeste(){
 	for(i=1;i<21;i++){
 		push(i);
 	}
-	newFrame();
 
-
+	newFrame(82);
+	setLocalIndex(12,871);
+	printf("%u\n",getLocalIndex(12));
 	for(;i<50;i++){
 		push(i);
 	}

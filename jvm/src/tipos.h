@@ -32,13 +32,22 @@ struct field{
 	char *name, *descriptor;
 };
 
+struct exception{
+	unsigned int startpc, endpc, handlerpc, catch_t;
+};
 
+struct code{
+	unsigned int name_i,length, max_stack, max_locals, code_l, et_l, att_c;
+	char *code;
+	struct attribute **atts;
+	struct exception **et;
+};
 
 struct method{
 	unsigned int aflags, name_i, descriptor_i, a_count;
 	struct attribute **atts;
 	char *name, *descriptor;
-	struct attribute  *code;
+	struct code  *code;
 };
 
 

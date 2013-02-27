@@ -123,7 +123,7 @@
 					<parser enabled="true"/>
 				</buildOutputProvider>
 				<scannerInfoProvider id="specsFile">
-					<runAction arguments="-g -Wall" command="gcc" useDefault="true"/>
+					<runAction arguments="-g -Wall -l libm" command="gcc" useDefault="true"/>
 					<parser enabled="true"/>
 				</scannerInfoProvider>
 			</profile>

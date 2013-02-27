@@ -7,6 +7,9 @@
 
 char  *name;
 static char * root;
+
+struct code * readCode(FILE * bc, unsigned int cpc, struct item ** pdc);
+
 /*
 *	funcao que le um u4 de um arquivo e o retorna
 *
@@ -276,7 +279,9 @@ void printAtts(unsigned int count, struct attribute ** atts){
 	}
 }
 
-struct attribute ** readAtts(unsigned int count, FILE * bc, unsigned int cpc, struct item ** pdc, struct attribute **code){
+
+
+struct attribute ** readAtts(unsigned int count, FILE * bc, unsigned int cpc, struct item ** pdc, struct code **c){
 	struct attribute **atts, *att, **first;
 	char *str, lido;
 	unsigned int j,k;
@@ -284,8 +289,8 @@ struct attribute ** readAtts(unsigned int count, FILE * bc, unsigned int cpc, st
 		return NULL;
 	atts=calloc(count, sizeof(struct attribute *));
 	first=atts;
-	if(code!=NULL)
-		*code=NULL;
+	if(c!=NULL)
+		*c=NULL;
 	for(j=0;j<count;j++){
 		att=malloc(sizeof(struct attribute));
 		*atts=att;
@@ -294,22 +299,60 @@ struct attribute ** readAtts(unsigned int count, FILE * bc, unsigned int cpc, st
 		att->name_i=pru2(bc,cpc);
 		att->name=getN(att->name_i,pdc)->string;
 		att->length=pru4(bc);
-		if(code!=NULL && strcmp(att->name, "Code")==0){
+		if(c!=NULL && strcmp(att->name, "Code")==0){
+			struct code *sc = readCode(bc,cpc,pdc);
+			sc->name_i=att->name_i;
+			sc->length= att->length;
+			*c=sc;
+		}else {
+			if(att->length>0){
+				att->info=calloc(att->length+1,sizeof(char));
+				str=att->info;
+			}
+			for(k=0;k<att->length;k++){
+				fscanf(bc,"%c",&lido);
+				*str=lido;
+				str++;
+			}
+			if(k>0) *str='\0';
+		}
 
-			*code=att;
-		}
-		if(att->length>0){
-			att->info=calloc(att->length+1,sizeof(char));
-			str=att->info;
-		}
-		for(k=0;k<att->length;k++){
-			fscanf(bc,"%c",&lido);
-			*str=lido;
-			str++;
-		}
-		if(k>0) *str='\0';
 	}
 	return first;
+}
+
+struct code * readCode(FILE * bc, unsigned int cpc, struct item ** pdc){
+	struct code * cod;
+	struct exception * exp;
+	int j;
+	char l;
+	cod=calloc(1,sizeof(struct code));
+	cod->max_stack=pru2(bc,0);
+	cod->max_locals=pru2(bc,0);
+	cod->code_l=pru4(bc);
+
+	cod->code=calloc(cod->code_l,sizeof(char));
+	if(cod->code==NULL){
+		printf("OOM Error\n");
+		exit(EXIT_FAILURE);
+	}
+	for(j=0;j<cod->code_l;j++){
+		fscanf(bc,"%c",&l);
+		cod->code[j]=l;
+	}
+	cod->et_l=pru2(bc,0);
+	cod->et=calloc(cod->et_l, sizeof(struct exception *));
+	for(j=0;j<cod->et_l;j++){
+		exp=calloc(1, sizeof(struct exception));
+		exp->startpc=pru2(bc,0);
+		exp->endpc=pru2(bc,0);
+		exp->handlerpc=pru2(bc,0);
+		exp->catch_t=pru2(bc,0);
+		cod->et[j]=exp;
+	}
+	cod->att_c=pru2(bc,0);
+	cod->atts=readAtts(cod->att_c,bc,cpc,pdc,NULL);
+	return cod;
 }
 
 void printFields(unsigned int count, struct field ** fds){
