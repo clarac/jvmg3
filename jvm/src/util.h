@@ -25,3 +25,5 @@ unsigned int getLow(double d);
 unsigned short tou2(char a1, char a2);
 
 unsigned int tou4(char a1, char a2, char a3, char a4);
+
+int isNaN(double d);

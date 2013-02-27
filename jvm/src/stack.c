@@ -1,6 +1,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stack.h>
+#include <util.h>
+
+struct snode{
+	unsigned int valor;
+	struct snode *prox;
+};
+
+static struct snode * topo=NULL, *base=NULL;
 
 /**
  * Funcao que retira item do topo e retorna seu valor
@@ -16,6 +24,23 @@ unsigned int pop(){
 	free(topo);
 	topo=prox;
 	return valor;
+}
+
+double popDbl(){
+	unsigned int al,ah;
+	double a;
+	al=pop();
+	ah=pop();
+	a=toDouble(ah,al);
+	return a;
+}
+
+void pushDbl(double a){
+	unsigned int ah, al;
+	ah=getHigh(a);
+	al=getLow(a);
+	push(ah);
+	push(al);
 }
 
 /*

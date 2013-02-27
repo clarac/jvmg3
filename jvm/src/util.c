@@ -129,3 +129,14 @@ unsigned int tou4(char a1, char a2, char a3, char a4){
 	return r;
 }
 
+int isNaN(double d){
+
+	unsigned int dh = getHigh(d);
+	unsigned int t=0x7FF00000;
+	dh&=t;
+	if(dh == t){
+		return 1;
+	}
+	else return 0;
+}
+
