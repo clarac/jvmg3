@@ -140,3 +140,13 @@ int isNaN(double d){
 	else return 0;
 }
 
+int isNaNF(float f){
+
+	unsigned int d = getBytes(f);
+	unsigned int t=0x7F800000;
+	d&=t;
+	if(d == t){
+		return 1;
+	}
+	else return 0;
+}
