@@ -722,7 +722,7 @@ int getRoot(char *path){
 
 }
 
-int main(int argc, char *argv[]){
+int main__(int argc, char *argv[]){
 
 	int indice;
 	if(argc<2){						// confere se foi fornecido o nome do .class

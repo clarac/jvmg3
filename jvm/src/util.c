@@ -1,3 +1,4 @@
+#include <stdint.h>
 
 /*
  * funcao que converte um u4 em float
@@ -83,6 +84,17 @@ unsigned int getLow(double d){
 	return *pt;
 }
 
+double LtoD(long long l){
+	double *d;
+	d = (double *) &l;
+	return *d;
+}
+
+long long DtoL(double d){
+	long long *l;
+	l = (long long *) &d;
+	return *l;
+}
 
 /*
 *	funcao que transforma um par de chars (bytes)
@@ -149,4 +161,25 @@ int isNaNF(float f){
 		return 1;
 	}
 	else return 0;
+}
+
+long long toLong(unsigned int ah, unsigned int al){
+	long long l;
+	l = 0;
+	l |= ah;
+	l <<= 32;
+	l|=al;
+	return l;
+}
+
+unsigned int getLHigh(long long l){
+	unsigned int *pt;
+	pt = (unsigned int *) &l;
+	pt++;
+	return *pt;
+}
+
+unsigned int getLlow(long long l){
+
+	return (unsigned int) l;
 }

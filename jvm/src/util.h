@@ -11,7 +11,7 @@
 
 
 #endif /* FPFUNC_H_ */
-
+#include <stdint.h>
 float toFloat(unsigned int bits);
 
 unsigned int getBytes(float f);
@@ -29,3 +29,13 @@ unsigned int tou4(char a1, char a2, char a3, char a4);
 int isNaN(double d);
 
 int isNaNF(float f);
+
+double LtoD(long long l);
+
+long long DtoL(double d);
+
+long long toLong(unsigned int h, unsigned int l);
+
+unsigned int getLHigh(long long  l);
+
+unsigned int getLlow(long long  l);

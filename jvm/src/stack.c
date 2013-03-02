@@ -43,6 +43,17 @@ void pushDbl(double a){
 	push(al);
 }
 
+long long popLong(){
+	unsigned int al,ah;
+	al=pop();
+	ah=pop();
+	return toLong(ah,al);
+}
+
+void pushLong(long long l){
+	push(getLHigh(l));
+	push(getLlow(l));
+}
 /*
  * Funcao que insere um item no topo da pilha
  *
