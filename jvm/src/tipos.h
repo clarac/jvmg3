@@ -27,9 +27,10 @@ struct attribute{
 };
 
 struct field{
-	unsigned int aflags, name_i, descriptor_i, a_count;
+	unsigned int aflags, name_i, descriptor_i, a_count, value_h, value_l;
 	struct attribute **atts;
 	char *name, *descriptor;
+
 };
 
 struct exception{

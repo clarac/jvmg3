@@ -3,6 +3,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <heap.h>
+#include <main.h>
+#include <string.h>
+#include <classloader.h>
 
 /*TODO Colocar essa bendita instrucao na stack. Ela nao funciona de jeito nenhum la, nao faco ideia pq */
 struct Array popArray(){
@@ -1032,6 +1035,246 @@ void sipush(unsigned int byte1, unsigned int byte2){
 	push(a);
 }
 
+
+void putstatic(unsigned int byte1, unsigned int byte2){
+	byte1<<=8;
+	byte1|=byte2;
+	struct item * a = current->cpool[byte1-1];
+	struct class *c;
+	struct field *f;
+	if(a->tag==9){ //field
+		c = getClass(a->class);
+		f = getField(c,a->name_and_type->name);
+		f->value_l = pop();
+		if(strcmp(f->descriptor,"D")==0 || strcmp(f->descriptor,"J")==0 ){ //double ou long?
+			f->value_h = pop();
+		}
+	}
+	//TODO invalid index?
+}
+
+void getstatic(unsigned int byte1, unsigned int byte2){
+	byte1<<=8;
+	byte1|=byte2;
+	struct item * a = current->cpool[byte1-1];
+	struct class *c;
+	struct field *f;
+	if(a->tag==9){ //field
+		c = getClass(a->class);
+		f = getField(c,a->name_and_type->name);
+		//if((f->aflags & 0x8)!=0 )
+		if(strcmp(f->descriptor,"D")==0 || strcmp(f->descriptor,"J")==0 ){ //double ou long?
+			push(f->value_h);
+		}
+		push(f->value_l);
+	}
+	//TODO invalid index?
+}
+
+void ldc(unsigned int index){
+/*
+ * The index is an unsigned byte that must be a valid index into the run-time constant pool of the
+ * current class (§2.6). The run-time constant pool entry at index either must be a run-time constant
+ * of type int or float, or a reference to a string literal, or a symbolic reference to a class,
+ * method type, or method handle (§5.1).
+If the run-time constant pool entry is a run-time constant of type int or float, the numeric value
+of that run-time constant is pushed onto the operand stack as an int or float, respectively.
+Otherwise, if the run-time constant pool entry is a reference to an instance of class String
+representing a string literal (§5.1), then a reference to that instance, value, is pushed onto
+the operand stack.
+Otherwise, if the run-time constant pool entry is a symbolic reference to a class (§5.1), then the
+named class is resolved (§5.4.3.1) and a reference to the Class object representing that class, value,
+is pushed onto the operand stack.
+Otherwise, the run-time constant pool entry must be a symbolic reference to a method type or a
+method handle (§5.1). The method type or method handle is resolved (§5.4.3.5) and a reference to
+the resulting instance of java.lang.invoke.MethodType or java.lang.invoke.MethodHandle, value,
+is pushed onto the operand stack.
+ *
+ */
+	struct item *a;
+	struct class *c;
+	a=current->cpool[index-1];
+	//TODO checar com tamanho (ldc_w, ldc2_w)
+	switch(a->tag){
+		case 3: //int
+		case 4: //float
+			push(a->bytes);
+			break;
+		case 8: //string
+			push((unsigned int)a->string);
+			break;
+		case 7: //class
+			c=getClass(a->name);
+			push((unsigned int)c);
+			break;
+	} //TODO method handles ?
+}
+
+void ldc_w(unsigned int byte1, unsigned int byte2){
+	struct item *a;
+	struct class *c;
+	byte1<<=8;
+	byte1|=byte2;
+	a=current->cpool[byte1-1];
+
+	switch(a->tag){
+		case 3: //int
+		case 4: //float
+			push(a->bytes);
+			break;
+		case 8: //string
+			push((unsigned int)a->string);
+			break;
+		case 7: //class
+			c=getClass(a->name);
+			push((unsigned int)c);
+			break;
+	} //TODO method handles ?
+}
+
+void ldc2_w(unsigned int byte1, unsigned int byte2){
+	/*
+	 * The unsigned indexbyte1 and indexbyte2 are assembled into an unsigned 16-bit index into
+	 * the run-time constant pool of the current class (§2.6), where the value of the index is
+	 * calculated as (indexbyte1 << 8) | indexbyte2. The index must be a valid index into the
+	 * run-time constant pool of the current class. The run-time constant pool entry at the
+	 * index must be a run-time constant of type long or double (§5.1). The numeric value of
+	 * that run-time constant is pushed onto the operand stack as a long or double, respectively.
+	 */
+	struct item *a;
+	struct class *c;
+	byte1<<=8;
+	byte1|=byte2;
+	a=current->cpool[byte1-1];
+
+	switch(a->tag){
+		case 5: //long
+		case 6: //double
+			push(a->high_bytes);
+			push(a->low_bytes);
+			break;
+	}
+}
+
+void goto_(unsigned int branchbyte1,unsigned int branchbyte2){
+	branchbyte1<<=8;
+	branchbyte1|=branchbyte2;
+	int signedoffset = branchbyte1;
+
+	//TODO implementar!!
+}
+
+void goto_w(unsigned int branchbyte1,unsigned int branchbyte2,unsigned int branchbyte3,unsigned int branchbyte4){
+	branchbyte1<<=8;
+	branchbyte1|=branchbyte2;
+	branchbyte1<<=8;
+	branchbyte1|=branchbyte3;
+	branchbyte1<<=8;
+	branchbyte1|=branchbyte4;
+	int signedoffset = branchbyte1;
+
+	//TODO implementar!!
+}
+
+void if_acmpeq (unsigned int branchbyte1,unsigned int branchbyte2){
+	unsigned int a,b;
+	b=pop();
+	a=pop();
+	if(a==b)
+		goto_(branchbyte1, branchbyte2);
+}
+
+void if_acmpne (unsigned int branchbyte1,unsigned int branchbyte2){
+	unsigned int a,b;
+	b=pop();
+	a=pop();
+	if(a!=b)
+		goto_(branchbyte1, branchbyte2);
+}
+
+void if_icmpeq (unsigned int branchbyte1,unsigned int branchbyte2){
+	if_acmpeq(branchbyte1,branchbyte2);
+}
+
+void if_icmpne (unsigned int branchbyte1,unsigned int branchbyte2){
+	if_acmpne(branchbyte1,branchbyte2);
+}
+
+void if_icmplt (unsigned int branchbyte1,unsigned int branchbyte2){
+	unsigned int a,b;
+	b=pop();
+	a=pop();
+	if(a<b)
+		goto_(branchbyte1, branchbyte2);
+}
+
+void if_icmple (unsigned int branchbyte1,unsigned int branchbyte2){
+	unsigned int a,b;
+	b=pop();
+	a=pop();
+	if(a<=b)
+		goto_(branchbyte1, branchbyte2);
+}
+
+void if_icmpgt (unsigned int branchbyte1,unsigned int branchbyte2){
+	unsigned int a,b;
+	b=pop();
+	a=pop();
+	if(a>b)
+		goto_(branchbyte1, branchbyte2);
+}
+
+void if_icmpge (unsigned int branchbyte1,unsigned int branchbyte2){
+	unsigned int a,b;
+	b=pop();
+	a=pop();
+	if(a>=b)
+		goto_(branchbyte1, branchbyte2);
+}
+
+void ifeq (unsigned int branchbyte1,unsigned int branchbyte2){
+	int a = pop();
+	if(a==0)
+		goto_(branchbyte1, branchbyte2);
+}
+
+void ifne (unsigned int branchbyte1,unsigned int branchbyte2){
+	int a = pop();
+	if(a!=0)
+		goto_(branchbyte1, branchbyte2);
+}
+
+void iflt (unsigned int branchbyte1,unsigned int branchbyte2){
+	int a = pop();
+	if(a<0)
+		goto_(branchbyte1, branchbyte2);
+}
+
+void ifgt (unsigned int branchbyte1,unsigned int branchbyte2){
+	int a = pop();
+	if(a>0)
+		goto_(branchbyte1, branchbyte2);
+}
+
+void ifle (unsigned int branchbyte1,unsigned int branchbyte2){
+	int a = pop();
+	if(a<=0)
+		goto_(branchbyte1, branchbyte2);
+}
+
+void ifge (unsigned int branchbyte1,unsigned int branchbyte2){
+	int a = pop();
+	if(a>=0)
+		goto_(branchbyte1, branchbyte2);
+}
+
+void ifnonnull (unsigned int branchbyte1,unsigned int branchbyte2){
+	ifne(branchbyte1,branchbyte2);
+}
+
+void ifnull (unsigned int branchbyte1,unsigned int branchbyte2){
+	ifeq(branchbyte1,branchbyte2);
+}
 
 /*
 int main(){

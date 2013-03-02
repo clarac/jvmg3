@@ -230,8 +230,8 @@ void setStrings(struct item **pdc, int tam){
 				aux=getN(atual->class_index,pdc);
 				aux2=getN(aux->name_index,pdc);
 				atual->class=aux2->string;
-
 				atual->name_and_type=getN(atual->name_and_type_index, pdc);
+
 				break;
 
 			case 8: //CONSTANT_String
@@ -417,6 +417,41 @@ void printClass(struct class * thisc){
 	printMethods(thisc->m_count,thisc->methods);
 	printf("attributes_count : %u\n",thisc->a_count);
 	printAtts(thisc->a_count,thisc->atts);
+}
+
+
+struct field * getField(struct class * c, char * name){
+	int i;
+	for(i=0;i<c->f_count;i++){
+		if(strcmp(name,c->fields[i]->name)==0){
+			return c->fields[i];
+		}
+	}
+	//TODO tratar nao encontrado
+	return NULL;
+}
+
+struct method * getMethod(struct class * c, char * name){
+	int i;
+	for(i=0;i<c->m_count;i++){
+		if(strcmp(name,c->methods[i]->name)==0){
+			return c->methods[i];
+		}
+	}
+	//TODO tratar nao encontrado
+	return NULL;
+}
+
+
+unsigned int getMethodCPIndex(struct class * c, char * name, char * classe){
+	int i;
+	for(i=0;i<c->cpc-1;i++){
+		if(c->cpool[i]!=NULL && c->cpool[i]->tag ==10  && strcmp(name,c->cpool[i]->name_and_type->name)==0 && strcmp(classe, c->cpool[i]->class)==0){
+			return i+1;
+		}
+	}
+	//TODO tratar nao encontrado
+	return 0;
 }
 
 
@@ -662,6 +697,8 @@ struct class * getClass(char *pathname){
 		//fds++;
 
 		fd->aflags=pru2(bc,0);
+		fd->value_h=0;
+		fd->value_l=0;
 		fd->name_i=pru2(bc,cpc);
 		fd->name=getN(fd->name_i,pdc)->string;
 		fd->descriptor_i=pru2(bc,cpc);
@@ -746,15 +783,11 @@ struct class * getFirst(char * caminho){
 	strcpy(name,caminho);
 	name+=indice;
 
-	getClass(name);
+	return getClass(name);
 
-	printf("Total de %d classes carregadas\n",c_count);
-	return 0;
+	//printf("Total de %d classes carregadas\n",c_count);
+
 }
 
 //TODO Preparation involves creating the static fields for the class or interface and initializing
 //those fields to their standard default values 0/null/false
-
-
-
-
