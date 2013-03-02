@@ -182,53 +182,53 @@ void aaload(){
 
 
 void aload(unsigned int index){
-	unsigned int a = getLocalIndex(index);
+	unsigned int a = getLocalVar(index);
 	push(a);
 }
 
 void aload_0(){
-	unsigned int a = getLocalIndex(0);
+	unsigned int a = getLocalVar(0);
 	push(a);
 }
 
 void aload_1(){
-	unsigned int a = getLocalIndex(1);
+	unsigned int a = getLocalVar(1);
 	push(a);
 }
 
 void aload_2(){
-	unsigned int a = getLocalIndex(2);
+	unsigned int a = getLocalVar(2);
 	push(a);
 }
 
 void aload_3(){
-	unsigned int a = getLocalIndex(3);
+	unsigned int a = getLocalVar(3);
 	push(a);
 }
 
 void astore(int index){
 	unsigned int a = pop();
-	setLocalIndex(index,a);
+	setLocalVar(index,a);
 }
 
 void astore_0(){
 	unsigned int a = pop();
-	setLocalIndex(0,a);
+	setLocalVar(0,a);
 }
 
 void astore_1(){
 	unsigned int a = pop();
-	setLocalIndex(1,a);
+	setLocalVar(1,a);
 }
 
 void astore_2(){
 	unsigned int a = pop();
-	setLocalIndex(2,a);
+	setLocalVar(2,a);
 }
 
 void astore_3(){
 	unsigned int a = pop();
-	setLocalIndex(3,a);
+	setLocalVar(3,a);
 }
 
 void bipush(unsigned int byte){
@@ -237,40 +237,40 @@ void bipush(unsigned int byte){
 
 void dload(unsigned int index){
 	unsigned int ah, al;
-	ah=getLocalIndex(index);
-	al=getLocalIndex(index+1);
+	ah=getLocalVar(index);
+	al=getLocalVar(index+1);
 	double a = toDouble(ah,al);
 	pushDbl(a);
 }
 
 void dload_0(){
 	unsigned int ah, al;
-	ah=getLocalIndex(0);
-	al=getLocalIndex(1);
+	ah=getLocalVar(0);
+	al=getLocalVar(1);
 	double a = toDouble(ah,al);
 	pushDbl(a);
 }
 
 void dload_1(){
 	unsigned int ah, al;
-	ah=getLocalIndex(1);
-	al=getLocalIndex(2);
+	ah=getLocalVar(1);
+	al=getLocalVar(2);
 	double a = toDouble(ah,al);
 	pushDbl(a);
 }
 
 void dload_2(){
 	unsigned int ah, al;
-	ah=getLocalIndex(2);
-	al=getLocalIndex(3);
+	ah=getLocalVar(2);
+	al=getLocalVar(3);
 	double a = toDouble(ah,al);
 	pushDbl(a);
 }
 
 void dload_3(){
 	unsigned int ah, al;
-	ah=getLocalIndex(3);
-	al=getLocalIndex(4);
+	ah=getLocalVar(3);
+	al=getLocalVar(4);
 	double a = toDouble(ah,al);
 	pushDbl(a);
 }
@@ -280,8 +280,8 @@ void dstore(unsigned int index){
 	double a = popDbl();
 	ah=getHigh(a);
 	al=getLow(a);
-	setLocalIndex(index,ah);
-	setLocalIndex(index+1,al);
+	setLocalVar(index,ah);
+	setLocalVar(index+1,al);
 }
 
 void dstore_0(){
@@ -289,8 +289,8 @@ void dstore_0(){
 	double a = popDbl();
 	ah=getHigh(a);
 	al=getLow(a);
-	setLocalIndex(0,ah);
-	setLocalIndex(1,al);
+	setLocalVar(0,ah);
+	setLocalVar(1,al);
 }
 
 void dstore_1(){
@@ -298,8 +298,8 @@ void dstore_1(){
 	double a = popDbl();
 	ah=getHigh(a);
 	al=getLow(a);
-	setLocalIndex(1,ah);
-	setLocalIndex(2,al);
+	setLocalVar(1,ah);
+	setLocalVar(2,al);
 }
 
 void dstore_2(){
@@ -307,8 +307,8 @@ void dstore_2(){
 	double a = popDbl();
 	ah=getHigh(a);
 	al=getLow(a);
-	setLocalIndex(2,ah);
-	setLocalIndex(3,al);
+	setLocalVar(2,ah);
+	setLocalVar(3,al);
 }
 
 void dstore_3(){
@@ -316,8 +316,8 @@ void dstore_3(){
 	double a = popDbl();
 	ah=getHigh(a);
 	al=getLow(a);
-	setLocalIndex(3,ah);
-	setLocalIndex(4,al);
+	setLocalVar(3,ah);
+	setLocalVar(4,al);
 }
 
 void fadd(){
@@ -476,7 +476,7 @@ void caload(){
 	}
 	if (i>=a.length){
 
-		printf("ArrayIndexOutOfBoundsException\n");
+		printf("ArrayVarOutOfBoundsException\n");
 		exit(EXIT_FAILURE);
 	}
 	push(a.arrayref[i]);
@@ -493,7 +493,7 @@ void castore(){
 		exit(EXIT_FAILURE);
 	}
 	if (i>=a.length){
-		printf("ArrayIndexOutOfBoundsException\n");
+		printf("ArrayVarOutOfBoundsException\n");
 		exit(EXIT_FAILURE);
 	}
 	a.arrayref[i] = c;
@@ -517,7 +517,7 @@ void iaload(){
 	}
 	if (i>=a.length){
 
-		printf("ArrayIndexOutOfBoundsException\n");
+		printf("ArrayVarOutOfBoundsException\n");
 		exit(EXIT_FAILURE);
 	}
 	push(a.arrayref[i]);
@@ -534,7 +534,7 @@ void iastore(){
 		exit(EXIT_FAILURE);
 	}
 	if (i>=a.length){
-		printf("ArrayIndexOutOfBoundsException\n");
+		printf("ArrayVarOutOfBoundsException\n");
 		exit(EXIT_FAILURE);
 	}
 	a.arrayref[i] = c;
@@ -551,7 +551,7 @@ void faload(){
 	}
 	if (i>=a.length){
 
-		printf("ArrayIndexOutOfBoundsException\n");
+		printf("ArrayVarOutOfBoundsException\n");
 		exit(EXIT_FAILURE);
 	}
 	push(a.arrayref[i]);
@@ -568,7 +568,7 @@ void fastore(){
 		exit(EXIT_FAILURE);
 	}
 	if (i>=a.length){
-		printf("ArrayIndexOutOfBoundsException\n");
+		printf("ArrayVarOutOfBoundsException\n");
 		exit(EXIT_FAILURE);
 	}
 	a.arrayref[i] = c;
@@ -586,7 +586,7 @@ void daload(){
 	}
 	if (i>=a.length){
 
-		printf("ArrayIndexOutOfBoundsException\n");
+		printf("ArrayVarOutOfBoundsException\n");
 		exit(EXIT_FAILURE);
 	}
 	push(a.arrayref[i]);
@@ -605,7 +605,7 @@ void dastore(){
 		exit(EXIT_FAILURE);
 	}
 	if (i>=a.length){
-		printf("ArrayIndexOutOfBoundsException\n");
+		printf("ArrayVarOutOfBoundsException\n");
 		exit(EXIT_FAILURE);
 	}
 	a.arrayref[i] = d;
@@ -773,9 +773,9 @@ void ineg(){
 }
 
 void iinc(unsigned int index, int constante){
-	int v = getLocalIndex(index);
+	int v = getLocalVar(index);
 	v+=constante;
-	setLocalIndex(index,v);
+	setLocalVar(index,v);
 }
 
 void iload(unsigned int index){
@@ -893,8 +893,8 @@ void ldiv_(){
 
 void lload (unsigned int index){
 	unsigned int ah, al;
-	ah=getLocalIndex(index);
-	al=getLocalIndex(index+1);
+	ah=getLocalVar(index);
+	al=getLocalVar(index+1);
 	long long l = toLong(ah,al);
 	pushLong(l);
 }
@@ -920,8 +920,8 @@ void lstore(unsigned int index){
 	unsigned int ah, al;
 	ah=getLHigh(a);
 	al=getLlow(a);
-	setLocalIndex(index,ah);
-	setLocalIndex(index+1,al);
+	setLocalVar(index,ah);
+	setLocalVar(index+1,al);
 }
 
 void lstore_0(){

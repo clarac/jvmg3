@@ -10,7 +10,7 @@
 
 
 
-#endif /* FPFUNC_H_ */
+
 #include <stdint.h>
 float toFloat(unsigned int bits);
 
@@ -39,3 +39,5 @@ long long toLong(unsigned int h, unsigned int l);
 unsigned int getLHigh(long long  l);
 
 unsigned int getLlow(long long  l);
+
+#endif /* FPFUNC_H_ */

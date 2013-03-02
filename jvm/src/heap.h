@@ -3,7 +3,7 @@
 
 
 
-#endif /* HEAP_H_ */
+
 
 #include "tipos.h"
 struct Array{
@@ -46,3 +46,5 @@ struct Array createNewArray(unsigned int num_itens, unsigned int type);
 struct Object* newObject(struct class *instance);
 void verifyHeapSpace();
 void createHeap();
+
+#endif /* HEAP_H_ */

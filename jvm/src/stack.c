@@ -117,7 +117,7 @@ void pushArray(struct Array a){
 }
 
 
-unsigned int getLocalIndex(int index){
+unsigned int getLocalVar(int index){
 	if(base==NULL){
 		printf("Erro: array de variaveis locais inexistente. Retornando 0.\n");
 		return 0;
@@ -126,7 +126,7 @@ unsigned int getLocalIndex(int index){
 	return local[index];
 }
 
-void setLocalIndex(int index, int value){
+void setLocalVar(int index, int value){
 	if(base==NULL){
 		printf("Erro: array de variaveis locais inexistente.\n");
 		return;
@@ -146,8 +146,8 @@ int mainTeste(){
 	}
 
 	newFrame(82);
-	setLocalIndex(12,871);
-	printf("%u\n",getLocalIndex(12));
+	setLocalVar(12,871);
+	printf("%u\n",getLocalVar(12));
 	for(;i<50;i++){
 		push(i);
 	}

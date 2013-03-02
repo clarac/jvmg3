@@ -10,7 +10,6 @@
 
 
 
-#endif /* CLASSLOADER_H_ */
 
 
 static char pool[13][30]={"","CONSTANT_Utf8","","CONSTANT_Integer","CONSTANT_Float",
@@ -25,3 +24,5 @@ static char pool[13][30]={"","CONSTANT_Utf8","","CONSTANT_Integer","CONSTANT_Flo
 static struct class **classes;
 static int c_count=0;
 struct class * getClass(char *pathname);
+
+#endif /* CLASSLOADER_H_ */

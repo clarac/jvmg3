@@ -10,7 +10,7 @@
 
 
 
-#endif /* TIPOS_H_ */
+
 
 struct item{				// estrutura que guarda valor de um item do pool de constantes
 	unsigned int tag, index;
@@ -63,3 +63,4 @@ struct class{
 	struct class *super;
 };
 
+#endif /* TIPOS_H_ */

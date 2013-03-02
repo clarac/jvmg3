@@ -5,8 +5,9 @@
 #include <tipos.h>
 #include <classloader.h>
 
-char  *name;
-static char * root;
+static char *root;
+char *name;
+
 
 struct code * readCode(FILE * bc, unsigned int cpc, struct item ** pdc);
 
@@ -693,7 +694,7 @@ struct class * getClass(char *pathname){
 	thisc->a_count=pru2(bc,0);
 	thisc->atts=readAtts(thisc->a_count,bc,thisc->cpc,thisc->cpool,NULL);
 
-	printf("carregou %s com sucesso\n",pathname);
+	printf("carregou %s com sucesso\n",thisc->name);
 	//printClass(thisc);
 
 	fclose(bc);
@@ -701,7 +702,7 @@ struct class * getClass(char *pathname){
 	if(thisc->super_c>0){
 		i=strlen(root)+ strlen(thisc->supername)+6;
 		if(i>500)
-			pathname=(char *)realloc(pathname,i);
+			pathname=(char *)realloc(pathname,i+100);
 
 		strcpy(pathname,thisc->supername);
 		strcat(pathname,".class\0");
@@ -722,28 +723,27 @@ int getRoot(char *path){
 
 }
 
-int main(int argc, char *argv[]){
-
+struct class * getFirst(char * caminho){
 	int indice;
-	if(argc<2){						// confere se foi fornecido o nome do .class
-		printf("Informe o arquivo .class\n");
-		return 1;
-	}
-	indice=getRoot(argv[1]);
+	indice=getRoot(caminho);
 	indice++;
-	name=argv[1];
+	name=caminho;
 	root=calloc(indice+1,sizeof(char));
 	if(indice>1){
 		root=strncpy(root,name,indice);
 		root[indice]='\0';
 	}
 	//TODO checar root de acordo com 1a classe, ajustar se necessário!
+	//TODO NoClassDefFoundError, ClassFormatError, UnsupportedClassVersionError, ClassCircularityError,IncompatibleClassChangeError
+
+	//TODO NoSuchFieldError, NoSuchMethodError
+
 	else{
 		indice--;
 		root[0]='\0';
 	}
 	name=calloc(500+indice,sizeof(char));
-	strcpy(name,argv[1]);
+	strcpy(name,caminho);
 	name+=indice;
 
 	getClass(name);
@@ -751,5 +751,10 @@ int main(int argc, char *argv[]){
 	printf("Total de %d classes carregadas\n",c_count);
 	return 0;
 }
+
+//TODO Preparation involves creating the static fields for the class or interface and initializing
+//those fields to their standard default values 0/null/false
+
+
 
 
