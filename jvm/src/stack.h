@@ -23,4 +23,7 @@ void pushDbl(double a);
 unsigned int getLocalIndex(int index);
 void setLocalIndex(int index, int value);
 long long popLong();
-void pushLong( l);
+void pushLong(long long l);
+struct Array popArray();
+void pushArray(struct Array a);
+

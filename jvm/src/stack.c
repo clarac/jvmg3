@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stack.h>
 #include <util.h>
+#include <heap.h>
 
 struct snode{
 	unsigned int valor;
@@ -109,6 +110,12 @@ void dropFrame(){
 	base=(struct snode *)valor;
 
 }
+
+void pushArray(struct Array a){
+	push (a.arrayref);
+	push (a.length);
+}
+
 
 unsigned int getLocalIndex(int index){
 	if(base==NULL){

@@ -1,8 +1,16 @@
 #include <stack.h>
 #include <util.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <heap.h>
 
-
+/*TODO Colocar essa bendita instrucao na stack. Ela nao funciona de jeito nenhum la, nao faco ideia pq */
+struct Array popArray(){
+	struct Array a;
+	a.length = pop();
+	a.arrayref = pop();
+	return a;
+}
 
 void aconst_null (){
 	push(0);
@@ -93,7 +101,7 @@ void dmul(){
  *  large as possible without exceeding the magnitude of the true mathematical
  *  quotient of value1' and value2'.
  */
-void drem(){
+void drem_(){
 	double a, b, r;
 	int q;
 	b=popDbl();
@@ -161,6 +169,17 @@ void dup2_x2(){
 	pushDbl(b);
 	pushDbl(a);
 }
+
+void aaload(){
+	unsigned int *arrayref = pop();
+	if (arrayref == NULL){
+		printf("NullPointerException");
+		exit(EXIT_FAILURE);
+	}
+	unsigned int index = pop();
+	push(arrayref[index]);
+}
+
 
 void aload(unsigned int index){
 	unsigned int a = getLocalIndex(index);
@@ -441,6 +460,159 @@ void fstore_3 (){
 	astore_3();
 }
 
+void arraylength(){
+	struct Array a;
+	a = popArray();
+	push(a.length);
+}
+
+void caload(){
+	unsigned int i=pop();
+	struct Array a;
+	a = popArray();
+	if (a.arrayref == NULL){
+		printf("NullPointerException\n");
+		exit(EXIT_FAILURE);
+	}
+	if (i>=a.length){
+
+		printf("ArrayIndexOutOfBoundsException\n");
+		exit(EXIT_FAILURE);
+	}
+	push(a.arrayref[i]);
+
+}
+
+void castore(){
+	char c=pop();
+	unsigned int i=pop();
+	struct Array a;
+	a = popArray();
+	if (a.arrayref == NULL){
+		printf("NullPointerException\n");
+		exit(EXIT_FAILURE);
+	}
+	if (i>=a.length){
+		printf("ArrayIndexOutOfBoundsException\n");
+		exit(EXIT_FAILURE);
+	}
+	a.arrayref[i] = c;
+
+}
+
+void newarray(int type){
+	struct Array a;
+	unsigned int i = pop();
+	a = createNewArray(i,type);
+	pushArray(a);
+}
+
+void iaload(){
+	unsigned int i=pop();
+	struct Array a;
+	a = popArray();
+	if (a.arrayref == NULL){
+		printf("NullPointerException\n");
+		exit(EXIT_FAILURE);
+	}
+	if (i>=a.length){
+
+		printf("ArrayIndexOutOfBoundsException\n");
+		exit(EXIT_FAILURE);
+	}
+	push(a.arrayref[i]);
+
+}
+
+void iastore(){
+	unsigned int c=pop();
+	unsigned int i=pop();
+	struct Array a;
+	a = popArray();
+	if (a.arrayref == NULL){
+		printf("NullPointerException\n");
+		exit(EXIT_FAILURE);
+	}
+	if (i>=a.length){
+		printf("ArrayIndexOutOfBoundsException\n");
+		exit(EXIT_FAILURE);
+	}
+	a.arrayref[i] = c;
+
+}
+
+void faload(){
+	unsigned int i=pop();
+	struct Array a;
+	a = popArray();
+	if (a.arrayref == NULL){
+		printf("NullPointerException\n");
+		exit(EXIT_FAILURE);
+	}
+	if (i>=a.length){
+
+		printf("ArrayIndexOutOfBoundsException\n");
+		exit(EXIT_FAILURE);
+	}
+	push(a.arrayref[i]);
+
+}
+
+void fastore(){
+	unsigned int c=pop();
+	unsigned int i=pop();
+	struct Array a;
+	a = popArray();
+	if (a.arrayref == NULL){
+		printf("NullPointerException\n");
+		exit(EXIT_FAILURE);
+	}
+	if (i>=a.length){
+		printf("ArrayIndexOutOfBoundsException\n");
+		exit(EXIT_FAILURE);
+	}
+	a.arrayref[i] = c;
+
+}
+
+
+void daload(){
+	unsigned int i=pop();
+	struct Array a;
+	a = popArray();
+	if (a.arrayref == NULL){
+		printf("NullPointerException\n");
+		exit(EXIT_FAILURE);
+	}
+	if (i>=a.length){
+
+		printf("ArrayIndexOutOfBoundsException\n");
+		exit(EXIT_FAILURE);
+	}
+	push(a.arrayref[i]);
+	push(a.arrayref[i+1]);
+
+}
+/* TODO dastore n funciona direito, tenho que arrumar */
+void dastore(){
+	unsigned int c=pop();
+	unsigned int d=pop();
+	unsigned int i=pop();
+	struct Array a;
+	a = popArray();
+	if (a.arrayref == NULL){
+		printf("NullPointerException\n");
+		exit(EXIT_FAILURE);
+	}
+	if (i>=a.length){
+		printf("ArrayIndexOutOfBoundsException\n");
+		exit(EXIT_FAILURE);
+	}
+	a.arrayref[i] = d;
+	a.arrayref[i+1] = c;
+}
+
+
 void i2l(){
 	unsigned int i = pop();
 	pushLong((long long)i);
@@ -712,7 +884,7 @@ void lconst_1 (){
 	pushLong(1L);
 }
 
-void ldiv(){
+void ldiv_(){
 	long long a,b;
 	b=popLong();
 	a=popLong();
@@ -777,7 +949,7 @@ void lmul(){
 }
 
 void lneg(){
-	long long a, b;
+	long long b;
 	b=popLong();
 	pushLong(0LL-b);
 }
@@ -860,6 +1032,8 @@ void sipush(unsigned int byte1, unsigned int byte2){
 	push(a);
 }
 
+
+/*
 int main(){
 	int i;
 	double a, b;
@@ -877,6 +1051,6 @@ int main(){
 	//printf("%d\n",(pop()));
 	return 0;
 }
-
+*/
 
 
