@@ -50,7 +50,7 @@ double toDouble(unsigned int high, unsigned int low){
 	*ipt=low;
 	ipt++;
 	*ipt=high;
-	return *pt;
+	return r;
 }
 
 /*
@@ -182,4 +182,8 @@ unsigned int getLHigh(long long l){
 unsigned int getLlow(long long l){
 
 	return (unsigned int) l;
+}
+
+unsigned int getLastByte(int a){
+	return a&0xFF;
 }

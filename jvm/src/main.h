@@ -8,9 +8,12 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
-#include <tipos.h>;
+#include <tipos.h>
 
 struct class * current;
-char * pc;
+int pc, pcInc;
+
+
+void executaMetodo();
 
 #endif /* MAIN_H_ */

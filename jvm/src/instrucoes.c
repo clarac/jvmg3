@@ -6,6 +6,74 @@
 #include <main.h>
 #include <string.h>
 #include <classloader.h>
+#include <instrucoes.h>
+
+struct code * cptr;
+
+unsigned int getByte(){
+	unsigned int a = (unsigned int) cptr->code[pc+1];
+	pcInc=2;
+	return a;
+}
+
+unsigned int getShort(){
+	unsigned int a = (unsigned int) cptr->code[pc+1];
+	unsigned int b = (unsigned int) cptr->code[pc+2];
+	a<<=8;
+	a|=b;
+	pcInc=3;
+	return a;
+}
+
+unsigned int getWord(){
+	unsigned int a = (unsigned int) cptr->code[pc+1];
+	unsigned int b = (unsigned int) cptr->code[pc+2];
+	unsigned int c = (unsigned int) cptr->code[pc+1];
+	unsigned int d = (unsigned int) cptr->code[pc+2];
+	a<<=8;
+	a|=b;
+	a<<=8;
+	a|=c;
+	a<<=8;
+	a|=d;
+	pcInc=5;
+	return a;
+}
+
+int getSignedByte(){
+	int a = (int) cptr->code[pc+1];
+	pcInc=2;
+	return a;
+}
+
+int getSignedShort(){
+	int a = (int) cptr->code[pc+1];
+	unsigned int b = (unsigned int) cptr->code[pc+2];
+	a<<=8;
+	a|=b;
+	if((a&0x8000)!=0){
+		a|=0xFFFF0000;
+	}
+
+	pcInc=3;
+
+	return a;
+}
+
+int getSignedWord(){
+	int a = (int) cptr->code[pc+1];
+	unsigned int b = (unsigned int) cptr->code[pc+2];
+	unsigned int c = (unsigned int) cptr->code[pc+1];
+	unsigned int d = (unsigned int) cptr->code[pc+2];
+	a<<=8;
+	a|=b;
+	a<<=8;
+	a|=c;
+	a<<=8;
+	a|=d;
+	pcInc=5;
+	return a;
+}
 
 /*TODO Colocar essa bendita instrucao na stack. Ela nao funciona de jeito nenhum la, nao faco ideia pq */
 struct Array popArray(){
@@ -184,7 +252,8 @@ void aaload(){
 }
 
 
-void aload(unsigned int index){
+void aload(){
+	unsigned int index = getByte();
 	unsigned int a = getLocalVar(index);
 	push(a);
 }
@@ -209,7 +278,8 @@ void aload_3(){
 	push(a);
 }
 
-void astore(int index){
+void astore(){
+	unsigned int index = getByte();
 	unsigned int a = pop();
 	setLocalVar(index,a);
 }
@@ -234,14 +304,16 @@ void astore_3(){
 	setLocalVar(3,a);
 }
 
-void bipush(unsigned int byte){
+void bipush(){
+	int byte = getSignedByte();
 	push(byte);
 }
 
-void dload(unsigned int index){
+void dload(){
+	unsigned int index = getByte();
 	unsigned int ah, al;
 	ah=getLocalVar(index);
-	al=getLocalVar(index+1);
+	al=getLocalVar((index)+1);
 	double a = toDouble(ah,al);
 	pushDbl(a);
 }
@@ -278,13 +350,14 @@ void dload_3(){
 	pushDbl(a);
 }
 
-void dstore(unsigned int index){
+void dstore(){
+	unsigned int index = getByte();
 	unsigned int ah, al;
 	double a = popDbl();
 	ah=getHigh(a);
 	al=getLow(a);
 	setLocalVar(index,ah);
-	setLocalVar(index+1,al);
+	setLocalVar((index)+1,al);
 }
 
 void dstore_0(){
@@ -384,8 +457,8 @@ void fdiv(){
 	push(getBytes(f1));
 }
 
-void fload (unsigned int index){
-	aload(index);
+void fload (){
+	aload();
 }
 
 void fload_0 (){
@@ -443,8 +516,8 @@ void fsub(){
 	push(getBytes(f1));
 }
 
-void fstore (unsigned int index){
-	astore(index);
+void fstore (){
+	astore();
 }
 
 void fstore_0 (){
@@ -503,7 +576,8 @@ void castore(){
 
 }
 
-void newarray(int type){
+void newarray(){
+	int type = getSignedByte();
 	struct Array a;
 	unsigned int i = pop();
 	a = createNewArray(i,type);
@@ -592,14 +666,13 @@ void daload(){
 		printf("ArrayVarOutOfBoundsException\n");
 		exit(EXIT_FAILURE);
 	}
-	push(a.arrayref[i]);
-	push(a.arrayref[i+1]);
+	pushDbl(((double *)a.arrayref)[i]);
 
 }
-/* TODO dastore n funciona direito, tenho que arrumar */
+
 void dastore(){
-	unsigned int c=pop();
-	unsigned int d=pop();
+	double d=popDbl();
+	printf("%lf\n", d);
 	unsigned int i=pop();
 	struct Array a;
 	a = popArray();
@@ -611,8 +684,8 @@ void dastore(){
 		printf("ArrayVarOutOfBoundsException\n");
 		exit(EXIT_FAILURE);
 	}
-	a.arrayref[i] = d;
-	a.arrayref[i+1] = c;
+	((double *)a.arrayref)[i] = d;
+
 }
 
 
@@ -775,14 +848,17 @@ void ineg(){
 	push(0-a);
 }
 
-void iinc(unsigned int index, int constante){
+void iinc(){
+	unsigned int index = getByte();
+	int cte = getSignedByte();
 	int v = getLocalVar(index);
-	v+=constante;
+	v+=cte;
 	setLocalVar(index,v);
+	pcInc=3;
 }
 
-void iload(unsigned int index){
-	aload(index);
+void iload(){
+	aload();
 }
 
 void iload_0(){
@@ -828,8 +904,8 @@ void iushr(){
 	push(a>>b);
 }
 
-void istore(unsigned int index){
-	astore(index);
+void istore(){
+	astore();
 }
 
 void istore_0(){
@@ -894,10 +970,11 @@ void ldiv_(){
 	pushLong(a/b);
 }
 
-void lload (unsigned int index){
+void lload (){
+	unsigned int index = getByte();
 	unsigned int ah, al;
 	ah=getLocalVar(index);
-	al=getLocalVar(index+1);
+	al=getLocalVar((index)+1);
 	long long l = toLong(ah,al);
 	pushLong(l);
 }
@@ -918,13 +995,14 @@ void lload_3 (){
 	lload(3);
 }
 
-void lstore(unsigned int index){
+void lstore(){
+	unsigned int index = getByte();
 	long long a = popLong();
 	unsigned int ah, al;
 	ah=getLHigh(a);
 	al=getLlow(a);
 	setLocalVar(index,ah);
-	setLocalVar(index+1,al);
+	setLocalVar((index)+1,al);
 }
 
 void lstore_0(){
@@ -1028,50 +1106,49 @@ void pop2(){
 	popDbl();
 }
 
-void sipush(unsigned int byte1, unsigned int byte2){
-	unsigned int a= byte1;
-	a<<=8;
-	a|=byte2;
+void sipush(){
+	int a = getSignedShort();
 	push(a);
 }
 
 
-void putstatic(unsigned int byte1, unsigned int byte2){
-	byte1<<=8;
-	byte1|=byte2;
-	struct item * a = current->cpool[byte1-1];
+void putstatic(){
+	unsigned int index = getShort();
+	struct item * a = current->cpool[index-1];
 	struct class *c;
 	struct field *f;
 	if(a->tag==9){ //field
 		c = getClass(a->class);
 		f = getField(c,a->name_and_type->name);
-		f->value_l = pop();
-		if(strcmp(f->descriptor,"D")==0 || strcmp(f->descriptor,"J")==0 ){ //double ou long?
-			f->value_h = pop();
+		if((f->aflags & 0x8)!=0 ){
+			f->value_l = pop();
+			if(strcmp(f->descriptor,"D")==0 || strcmp(f->descriptor,"J")==0 ){ //double ou long?
+				f->value_h = pop();
+			}
 		}
 	}
 	//TODO invalid index?
 }
 
-void getstatic(unsigned int byte1, unsigned int byte2){
-	byte1<<=8;
-	byte1|=byte2;
-	struct item * a = current->cpool[byte1-1];
+void getstatic(){
+	unsigned int index = getShort();
+	struct item * a = current->cpool[index-1];
 	struct class *c;
 	struct field *f;
 	if(a->tag==9){ //field
 		c = getClass(a->class);
 		f = getField(c,a->name_and_type->name);
-		//if((f->aflags & 0x8)!=0 )
-		if(strcmp(f->descriptor,"D")==0 || strcmp(f->descriptor,"J")==0 ){ //double ou long?
-			push(f->value_h);
+		if((f->aflags & 0x8)!=0 ){ //testa se eh estatica
+			if(strcmp(f->descriptor,"D")==0 || strcmp(f->descriptor,"J")==0 ){ //double ou long?
+				push(f->value_h);
+			}
+			push(f->value_l);
 		}
-		push(f->value_l);
 	}
 	//TODO invalid index?
 }
 
-void ldc(unsigned int index){
+void ldc(){
 /*
  * The index is an unsigned byte that must be a valid index into the run-time constant pool of the
  * current class (§2.6). The run-time constant pool entry at index either must be a run-time constant
@@ -1090,7 +1167,7 @@ method handle (§5.1). The method type or method handle is resolved (§5.4.3.5) an
 the resulting instance of java.lang.invoke.MethodType or java.lang.invoke.MethodHandle, value,
 is pushed onto the operand stack.
  *
- */
+ */	unsigned int index = getByte();
 	struct item *a;
 	struct class *c;
 	a=current->cpool[index-1];
@@ -1110,12 +1187,12 @@ is pushed onto the operand stack.
 	} //TODO method handles ?
 }
 
-void ldc_w(unsigned int byte1, unsigned int byte2){
+void ldc_w(){
 	struct item *a;
 	struct class *c;
-	byte1<<=8;
-	byte1|=byte2;
-	a=current->cpool[byte1-1];
+	unsigned int index = getShort();
+
+	a=current->cpool[index-1];
 
 	switch(a->tag){
 		case 3: //int
@@ -1132,7 +1209,7 @@ void ldc_w(unsigned int byte1, unsigned int byte2){
 	} //TODO method handles ?
 }
 
-void ldc2_w(unsigned int byte1, unsigned int byte2){
+void ldc2_w(){
 	/*
 	 * The unsigned indexbyte1 and indexbyte2 are assembled into an unsigned 16-bit index into
 	 * the run-time constant pool of the current class (§2.6), where the value of the index is
@@ -1143,9 +1220,9 @@ void ldc2_w(unsigned int byte1, unsigned int byte2){
 	 */
 	struct item *a;
 	struct class *c;
-	byte1<<=8;
-	byte1|=byte2;
-	a=current->cpool[byte1-1];
+	unsigned int index = getShort();
+
+	a=current->cpool[index-1];
 
 	switch(a->tag){
 		case 5: //long
@@ -1156,125 +1233,312 @@ void ldc2_w(unsigned int byte1, unsigned int byte2){
 	}
 }
 
-void goto_(unsigned int branchbyte1,unsigned int branchbyte2){
-	branchbyte1<<=8;
-	branchbyte1|=branchbyte2;
-	int signedoffset = branchbyte1;
-
-	//TODO implementar!!
+void goto_(){
+	int offset = getSignedShort();
+	pcInc = offset;
 }
 
-void goto_w(unsigned int branchbyte1,unsigned int branchbyte2,unsigned int branchbyte3,unsigned int branchbyte4){
-	branchbyte1<<=8;
-	branchbyte1|=branchbyte2;
-	branchbyte1<<=8;
-	branchbyte1|=branchbyte3;
-	branchbyte1<<=8;
-	branchbyte1|=branchbyte4;
-	int signedoffset = branchbyte1;
-
-	//TODO implementar!!
+void goto_w(){
+	int offset = getSignedWord();
+	pcInc = offset;
 }
 
-void if_acmpeq (unsigned int branchbyte1,unsigned int branchbyte2){
+void if_acmpeq (){
 	unsigned int a,b;
 	b=pop();
 	a=pop();
 	if(a==b)
-		goto_(branchbyte1, branchbyte2);
+		goto_();
 }
 
-void if_acmpne (unsigned int branchbyte1,unsigned int branchbyte2){
+void if_acmpne (){
 	unsigned int a,b;
 	b=pop();
 	a=pop();
 	if(a!=b)
-		goto_(branchbyte1, branchbyte2);
+		goto_();
 }
 
-void if_icmpeq (unsigned int branchbyte1,unsigned int branchbyte2){
-	if_acmpeq(branchbyte1,branchbyte2);
+void if_icmpeq (){
+	if_acmpeq();
 }
 
-void if_icmpne (unsigned int branchbyte1,unsigned int branchbyte2){
-	if_acmpne(branchbyte1,branchbyte2);
+void if_icmpne (){
+	if_acmpne();
 }
 
-void if_icmplt (unsigned int branchbyte1,unsigned int branchbyte2){
+void if_icmplt (){
 	unsigned int a,b;
 	b=pop();
 	a=pop();
 	if(a<b)
-		goto_(branchbyte1, branchbyte2);
+		goto_();
 }
 
-void if_icmple (unsigned int branchbyte1,unsigned int branchbyte2){
+void if_icmple (){
 	unsigned int a,b;
 	b=pop();
 	a=pop();
 	if(a<=b)
-		goto_(branchbyte1, branchbyte2);
+		goto_();
 }
 
-void if_icmpgt (unsigned int branchbyte1,unsigned int branchbyte2){
+void if_icmpgt (){
 	unsigned int a,b;
 	b=pop();
 	a=pop();
 	if(a>b)
-		goto_(branchbyte1, branchbyte2);
+		goto_();
 }
 
-void if_icmpge (unsigned int branchbyte1,unsigned int branchbyte2){
+void if_icmpge (){
 	unsigned int a,b;
 	b=pop();
 	a=pop();
 	if(a>=b)
-		goto_(branchbyte1, branchbyte2);
+		goto_();
 }
 
-void ifeq (unsigned int branchbyte1,unsigned int branchbyte2){
+void ifeq (){
 	int a = pop();
 	if(a==0)
-		goto_(branchbyte1, branchbyte2);
+		goto_();
 }
 
-void ifne (unsigned int branchbyte1,unsigned int branchbyte2){
+void ifne (){
 	int a = pop();
 	if(a!=0)
-		goto_(branchbyte1, branchbyte2);
+		goto_();
 }
 
-void iflt (unsigned int branchbyte1,unsigned int branchbyte2){
+void iflt (){
 	int a = pop();
 	if(a<0)
-		goto_(branchbyte1, branchbyte2);
+		goto_();
 }
 
-void ifgt (unsigned int branchbyte1,unsigned int branchbyte2){
+void ifgt (){
 	int a = pop();
 	if(a>0)
-		goto_(branchbyte1, branchbyte2);
+		goto_();
 }
 
-void ifle (unsigned int branchbyte1,unsigned int branchbyte2){
+void ifle (){
 	int a = pop();
 	if(a<=0)
-		goto_(branchbyte1, branchbyte2);
+		goto_();
 }
 
-void ifge (unsigned int branchbyte1,unsigned int branchbyte2){
+void ifge (){
 	int a = pop();
 	if(a>=0)
-		goto_(branchbyte1, branchbyte2);
+		goto_();
 }
 
-void ifnonnull (unsigned int branchbyte1,unsigned int branchbyte2){
-	ifne(branchbyte1,branchbyte2);
+void ifnonnull (){
+	ifne();
 }
 
-void ifnull (unsigned int branchbyte1,unsigned int branchbyte2){
-	ifeq(branchbyte1,branchbyte2);
+void ifnull (){
+	ifeq();
 }
+
+void baload(){
+	unsigned int i=pop();
+	struct Array a;
+	a = popArray();
+	if (a.arrayref == NULL){
+		printf("NullPointerException\n");
+		exit(EXIT_FAILURE);
+	}
+	if (i>=a.length){
+
+		printf("ArrayVarOutOfBoundsException\n");
+		exit(EXIT_FAILURE);
+	}
+	push(a.arrayref[i]);
+
+}
+
+void bastore(){
+	unsigned int c=pop();
+	unsigned int i=pop();
+	struct Array a;
+	a = popArray();
+	if (a.arrayref == NULL){
+		printf("NullPointerException\n");
+		exit(EXIT_FAILURE);
+	}
+	if (i>=a.length){
+		printf("ArrayVarOutOfBoundsException\n");
+		exit(EXIT_FAILURE);
+	}
+	a.arrayref[i] = c;
+
+}
+
+void saload(){
+	unsigned int i=pop();
+	struct Array a;
+	a = popArray();
+	if (a.arrayref == NULL){
+		printf("NullPointerException\n");
+		exit(EXIT_FAILURE);
+	}
+	if (i>=a.length){
+
+		printf("ArrayVarOutOfBoundsException\n");
+		exit(EXIT_FAILURE);
+	}
+	push(((short *)a.arrayref)[i]);
+
+}
+
+void sastore(){
+	unsigned short c=pop();
+	unsigned int i=pop();
+	struct Array a;
+	a = popArray();
+	if (a.arrayref == NULL){
+		printf("NullPointerException\n");
+		exit(EXIT_FAILURE);
+	}
+	if (i>=a.length){
+		printf("ArrayVarOutOfBoundsException\n");
+		exit(EXIT_FAILURE);
+	}
+	((short *)a.arrayref)[i] = c;
+
+}
+
+void laload(){
+	unsigned int i=pop();
+	struct Array a;
+	a = popArray();
+	if (a.arrayref == NULL){
+		printf("NullPointerException\n");
+		exit(EXIT_FAILURE);
+	}
+	if (i>=a.length){
+
+		printf("ArrayVarOutOfBoundsException\n");
+		exit(EXIT_FAILURE);
+	}
+	pushLong(((long int *)a.arrayref)[i]);
+
+
+}
+
+void lastore(){
+	long int l=popLong();
+	unsigned int i =pop();
+	struct Array a;
+	a = popArray();
+	if (a.arrayref == NULL){
+		printf("NullPointerException\n");
+		exit(EXIT_FAILURE);
+	}
+	if (i>=a.length){
+		printf("ArrayVarOutOfBoundsException\n");
+		exit(EXIT_FAILURE);
+	}
+	((long int*) a.arrayref)[i] = l;
+
+
+}
+
+void invokespecial(){
+	//TODO args??
+	unsigned int index = getShort();
+	struct method * m;
+	char * className;
+	struct Object * obj = pop();
+	m = getMethodByCPIndex(obj->instance,index);
+	className=getMethodClassName(obj->instance,index);
+	push(pc);
+	push(current);
+	current = getClass(className);
+	executaMetodo(m,obj);
+	pcInc=2;
+}
+
+void return_(){
+	dropFrame();
+	current=(struct class *)pop();
+	pc=pop();
+	pcInc=1;
+}
+
+void getfield(){
+	unsigned int index = getShort();
+	unsigned int value;
+	struct Object * obj;
+	obj = (struct Object *) pop();
+	char * name = obj->instance->cpool[index-1]->name_and_type->name;
+	value = getFieldValue(obj,name);
+	push(value);
+}
+
+
+void putfield(){
+	unsigned int index = getShort();
+	unsigned int value = pop();
+	unsigned int vh;
+	struct Object * obj;
+	char * descriptor = current->cpool[index-1]->name_and_type->descriptor;
+	if(strcmp(descriptor,"D")==0 || strcmp(descriptor,"J")==0 ){ // double ou long
+		vh = pop();
+		obj = (struct Object *) pop();
+		char * name = obj->instance->cpool[index-1]->name_and_type->name;
+		setDoubleFieldValue(obj,name,vh,value);
+	} else {
+		obj = (struct Object *) pop();
+		char * name = obj->instance->cpool[index-1]->name_and_type->name;
+		setFieldValue(obj,name,value);
+	}
+}
+
+/*******************************************************************************************
+ *
+ *
+ * A IMPLEMENTAR
+ *
+ *
+ ***********************************************************************************************/
+
+
+void aastore(){}
+
+void swap(){}
+void jsr(){}
+void ret(){}
+void tableswitch(){}
+void lookupswitch(){}
+void ireturn(){}
+void lreturn(){}
+void freturn(){}
+void dreturn(){}
+void areturn(){}
+
+
+void invokevirtual(){}
+
+void invokestatic(){}
+void invokeinterface(){}
+void invokedynamic(){}
+void new(){}
+void anewarray(){}
+void athrow(){}
+void checkcast(){}
+void instanceof(){}
+void monitorenter(){}
+void monitorexit(){}
+void wide(){}
+void multianewarray(){}
+void jsr_w(){}
+
+
+
 
 /*
 int main(){
@@ -1296,4 +1560,264 @@ int main(){
 }
 */
 
-
+void chamaInst(int op, struct code * c){
+	cptr=c;
+	switch(op){
+		case 0 : nop (); break;
+		case 1 : aconst_null (); break;
+		case 2 : iconst_m1 (); break;
+		case 3 : iconst_0 (); break;
+		case 4 : iconst_1 (); break;
+		case 5 : iconst_2 (); break;
+		case 6 : iconst_3 (); break;
+		case 7 : iconst_4 (); break;
+		case 8 : iconst_5 (); break;
+		case 9 : lconst_0 (); break;
+		case 10 : lconst_1 (); break;
+		case 11 : fconst_0 (); break;
+		case 12 : fconst_1 (); break;
+		case 13 : fconst_2 (); break;
+		case 14 : dconst_0 (); break;
+		case 15 : dconst_1 (); break;
+		case 16 : bipush (); break;
+		case 17 : sipush (); break;
+		case 18 : ldc (); break;
+		case 19 : ldc_w (); break;
+		case 20 : ldc2_w (); break;
+		case 21 : iload (); break;
+		case 22 : lload (); break;
+		case 23 : fload (); break;
+		case 24 : dload (); break;
+		case 25 : aload (); break;
+		case 26 : iload_0 (); break;
+		case 27 : iload_1 (); break;
+		case 28 : iload_2 (); break;
+		case 29 : iload_3 (); break;
+		case 30 : lload_0 (); break;
+		case 31 : lload_1 (); break;
+		case 32 : lload_2 (); break;
+		case 33 : lload_3 (); break;
+		case 34 : fload_0 (); break;
+		case 35 : fload_1 (); break;
+		case 36 : fload_2 (); break;
+		case 37 : fload_3 (); break;
+		case 38 : dload_0 (); break;
+		case 39 : dload_1 (); break;
+		case 40 : dload_2 (); break;
+		case 41 : dload_3 (); break;
+		case 42 : aload_0 (); break;
+		case 43 : aload_1 (); break;
+		case 44 : aload_2 (); break;
+		case 45 : aload_3 (); break;
+		case 46 : iaload (); break;
+		case 47 : laload (); break;
+		case 48 : faload (); break;
+		case 49 : daload (); break;
+		case 50 : aaload (); break;
+		case 51 : baload (); break;
+		case 52 : caload (); break;
+		case 53 : saload (); break;
+		case 54 : istore (); break;
+		case 55 : lstore (); break;
+		case 56 : fstore (); break;
+		case 57 : dstore (); break;
+		case 58 : astore (); break;
+		case 59 : istore_0 (); break;
+		case 60 : istore_1 (); break;
+		case 61 : istore_2 (); break;
+		case 62 : istore_3 (); break;
+		case 63 : lstore_0 (); break;
+		case 64 : lstore_1 (); break;
+		case 65 : lstore_2 (); break;
+		case 66 : lstore_3 (); break;
+		case 67 : fstore_0 (); break;
+		case 68 : fstore_1 (); break;
+		case 69 : fstore_2 (); break;
+		case 70 : fstore_3 (); break;
+		case 71 : dstore_0 (); break;
+		case 72 : dstore_1 (); break;
+		case 73 : dstore_2 (); break;
+		case 74 : dstore_3 (); break;
+		case 75 : astore_0 (); break;
+		case 76 : astore_1 (); break;
+		case 77 : astore_2 (); break;
+		case 78 : astore_3 (); break;
+		case 79 : iastore (); break;
+		case 80 : lastore (); break;
+		case 81 : fastore (); break;
+		case 82 : dastore (); break;
+		case 83 : aastore (); break;
+		case 84 : bastore (); break;
+		case 85 : castore (); break;
+		case 86 : sastore (); break;
+		case 87 : pop (); break;
+		case 88 : pop2 (); break;
+		case 89 : dup (); break;
+		case 90 : dup_x1 (); break;
+		case 91 : dup_x2 (); break;
+		case 92 : dup2 (); break;
+		case 93 : dup2_x1 (); break;
+		case 94 : dup2_x2 (); break;
+		case 95 : swap (); break;
+		case 96 : iadd (); break;
+		case 97 : ladd (); break;
+		case 98 : fadd (); break;
+		case 99 : dadd (); break;
+		case 100 : isub (); break;
+		case 101 : lsub (); break;
+		case 102 : fsub (); break;
+		case 103 : dsub (); break;
+		case 104 : imul (); break;
+		case 105 : lmul (); break;
+		case 106 : fmul (); break;
+		case 107 : dmul (); break;
+		case 108 : idiv (); break;
+		case 109 : ldiv_ (); break;
+		case 110 : fdiv (); break;
+		case 111 : ddiv (); break;
+		case 112 : irem (); break;
+		case 113 : lrem (); break;
+		case 114 : frem (); break;
+		case 115 : drem_ (); break;
+		case 116 : ineg (); break;
+		case 117 : lneg (); break;
+		case 118 : fneg (); break;
+		case 119 : dneg (); break;
+		case 120 : ishl (); break;
+		case 121 : lshl (); break;
+		case 122 : ishr (); break;
+		case 123 : lshr (); break;
+		case 124 : iushr (); break;
+		case 125 : lushr (); break;
+		case 126 : iand (); break;
+		case 127 : land (); break;
+		case 128 : ior (); break;
+		case 129 : lor (); break;
+		case 130 : ixor (); break;
+		case 131 : lxor (); break;
+		case 132 : iinc (); break;
+		case 133 : i2l (); break;
+		case 134 : i2f (); break;
+		case 135 : i2d (); break;
+		case 136 : l2i (); break;
+		case 137 : l2f (); break;
+		case 138 : l2d (); break;
+		case 139 : f2i (); break;
+		case 140 : f2l (); break;
+		case 141 : f2d (); break;
+		case 142 : d2i (); break;
+		case 143 : d2l (); break;
+		case 144 : d2f (); break;
+		case 145 : i2b (); break;
+		case 146 : i2c (); break;
+		case 147 : i2s (); break;
+		case 148 : lcmp (); break;
+		case 149 : fcmpl (); break;
+		case 150 : fcmpg (); break;
+		case 151 : dcmpl (); break;
+		case 152 : dcmpg (); break;
+		case 153 : ifeq (); break;
+		case 154 : ifne (); break;
+		case 155 : iflt (); break;
+		case 156 : ifge (); break;
+		case 157 : ifgt (); break;
+		case 158 : ifle (); break;
+		case 159 : if_icmpeq (); break;
+		case 160 : if_icmpne (); break;
+		case 161 : if_icmplt (); break;
+		case 162 : if_icmpge (); break;
+		case 163 : if_icmpgt (); break;
+		case 164 : if_icmple (); break;
+		case 165 : if_acmpeq (); break;
+		case 166 : if_acmpne (); break;
+		case 167 : goto_(); break;
+		case 168 : jsr (); break;
+		case 169 : ret (); break;
+		case 170 : tableswitch (); break;
+		case 171 : lookupswitch (); break;
+		case 172 : ireturn (); break;
+		case 173 : lreturn (); break;
+		case 174 : freturn (); break;
+		case 175 : dreturn (); break;
+		case 176 : areturn (); break;
+		case 177 : return_(); break;
+		case 178 : getstatic (); break;
+		case 179 : putstatic (); break;
+		case 180 : getfield (); break;
+		case 181 : putfield (); break;
+		case 182 : invokevirtual (); break;
+		case 183 : invokespecial (); break;
+		case 184 : invokestatic (); break;
+		case 185 : invokeinterface (); break;
+		case 186 : invokedynamic (); break;
+		case 187 : new (); break;
+		case 188 : newarray (); break;
+		case 189 : anewarray (); break;
+		case 190 : arraylength (); break;
+		case 191 : athrow (); break;
+		case 192 : checkcast (); break;
+		case 193 : instanceof (); break;
+		case 194 : monitorenter (); break;
+		case 195 : monitorexit (); break;
+		case 196 : wide (); break;
+		case 197 : multianewarray (); break;
+		case 198 : ifnull (); break;
+		case 199 : ifnonnull (); break;
+		case 200 : goto_w (); break;
+		case 201 : jsr_w (); break;
+		case 202 : nop (); break;
+		case 203 : nop (); break;
+		case 204 : nop (); break;
+		case 205 : nop (); break;
+		case 206 : nop (); break;
+		case 207 : nop (); break;
+		case 208 : nop (); break;
+		case 209 : nop (); break;
+		case 210 : nop (); break;
+		case 211 : nop (); break;
+		case 212 : nop (); break;
+		case 213 : nop (); break;
+		case 214 : nop (); break;
+		case 215 : nop (); break;
+		case 216 : nop (); break;
+		case 217 : nop (); break;
+		case 218 : nop (); break;
+		case 219 : nop (); break;
+		case 220 : nop (); break;
+		case 221 : nop (); break;
+		case 222 : nop (); break;
+		case 223 : nop (); break;
+		case 224 : nop (); break;
+		case 225 : nop (); break;
+		case 226 : nop (); break;
+		case 227 : nop (); break;
+		case 228 : nop (); break;
+		case 229 : nop (); break;
+		case 230 : nop (); break;
+		case 231 : nop (); break;
+		case 232 : nop (); break;
+		case 233 : nop (); break;
+		case 234 : nop (); break;
+		case 235 : nop (); break;
+		case 236 : nop (); break;
+		case 237 : nop (); break;
+		case 238 : nop (); break;
+		case 239 : nop (); break;
+		case 240 : nop (); break;
+		case 241 : nop (); break;
+		case 242 : nop (); break;
+		case 243 : nop (); break;
+		case 244 : nop (); break;
+		case 245 : nop (); break;
+		case 246 : nop (); break;
+		case 247 : nop (); break;
+		case 248 : nop (); break;
+		case 249 : nop (); break;
+		case 250 : nop (); break;
+		case 251 : nop (); break;
+		case 252 : nop (); break;
+		case 253 : nop (); break;
+		case 254 : nop (); break;
+		case 255 : nop (); break;
+	}
+}

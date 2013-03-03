@@ -442,6 +442,15 @@ struct method * getMethod(struct class * c, char * name){
 	return NULL;
 }
 
+struct method * getMethodByCPIndex(struct class * c, unsigned int index){
+	struct item * methodInfo = c->cpool[index-1];
+	return getMethod(getClass(methodInfo->class),methodInfo->name_and_type->name);
+}
+
+char * getMethodClassName(struct class * c, unsigned int index){
+	struct item * methodInfo = c->cpool[index-1];
+	return methodInfo->class;
+}
 
 unsigned int getMethodCPIndex(struct class * c, char * name, char * classe){
 	int i;

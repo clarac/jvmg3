@@ -11,6 +11,7 @@
 struct Array popArray ();
 
 
+
 void aconst_null ();
 
 
@@ -65,7 +66,7 @@ void dup2_x2 ();
 void aaload ();
 
 
-void aload (unsigned int index );
+void aload ( );
 
 
 void aload_0 ();
@@ -80,7 +81,7 @@ void aload_2 ();
 void aload_3 ();
 
 
-void astore (int index );
+void astore ( );
 
 
 void astore_0 ();
@@ -95,10 +96,10 @@ void astore_2 ();
 void astore_3 ();
 
 
-void bipush (unsigned int byte );
+void bipush ( );
 
 
-void dload (unsigned int index );
+void dload ( );
 
 
 void dload_0 ();
@@ -113,7 +114,7 @@ void dload_2 ();
 void dload_3 ();
 
 
-void dstore (unsigned int index );
+void dstore ( );
 
 
 void dstore_0 ();
@@ -149,7 +150,7 @@ void fconst_2 ();
 void fdiv ();
 
 
-void fload (unsigned int index );
+void fload ( );
 
 
 void fload_0 ();
@@ -176,7 +177,7 @@ void frem ();
 void fsub ();
 
 
-void fstore (unsigned int index );
+void fstore ( );
 
 
 void fstore_0 ();
@@ -200,7 +201,7 @@ void caload ();
 void castore ();
 
 
-void newarray (int type );
+void newarray ();
 
 
 void iaload ();
@@ -311,10 +312,10 @@ void imul ();
 void ineg ();
 
 
-void iinc (unsigned int index , int constante );
+void iinc ();
 
 
-void iload (unsigned int index );
+void iload ( );
 
 
 void iload_0 ();
@@ -341,7 +342,7 @@ void ishr ();
 void iushr ();
 
 
-void istore (unsigned int index );
+void istore ( );
 
 
 void istore_0 ();
@@ -377,7 +378,7 @@ void lconst_1 ();
 void ldiv_ ();
 
 
-void lload (unsigned int index );
+void lload ( );
 
 
 void lload_0 ();
@@ -392,7 +393,7 @@ void lload_2 ();
 void lload_3 ();
 
 
-void lstore (unsigned int index );
+void lstore ();
 
 
 void lstore_0 ();
@@ -440,6 +441,8 @@ void pop_ ();
 void pop2 ();
 
 
-void sipush (unsigned int byte1 , unsigned int byte2 );
+void sipush ( );
 
+
+void chamaInst();
 #endif /* INSTRUCOES_H_ */

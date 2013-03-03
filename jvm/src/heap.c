@@ -6,7 +6,7 @@
 
 
 //Definicao do tamanho maximo da heap, o padrao do Java eh 128mb, dividi por 10 pra demorar menos pra compilar, depois retorna ao valor anterior.
-#define HEAP_SIZE (134217728/10)
+#define HEAP_SIZE (134217728/5)
 
 //Esses valores serao os padroes, mas eh necessario verificar se foram definidos outros valores
 unsigned long int heap_min_size = HEAP_SIZE;
@@ -54,10 +54,14 @@ struct Object* newObject(struct class *instance){
 	objects_count++;
 
 	total_fields = instance->f_count;
-
+	obj->variables = calloc(total_fields, sizeof(struct ObjectField));
+	obj->instance = instance;
 	while (j<total_fields){
-		if ((unsigned int)instance->fields[j] != 0x0008){ //Static, nao eh variavel da instancia
+		if (((instance->fields[j]->aflags) & 0x0008)==0){ //Static, nao eh variavel da instancia
 			obj_field.index = instance->fields[j]->name_i;
+			obj_field.element = 0;
+			obj_field.name = instance->fields[j]->name;
+			obj_field.descriptor = instance->fields[j]->descriptor;
 			obj->variables[cont_variables] = obj_field;
 			cont_variables++;
 		}
@@ -66,11 +70,12 @@ struct Object* newObject(struct class *instance){
 
 	obj->fields_count = cont_variables;
 
-	obj->super = NULL;
+	/*obj->super = NULL;
 
 	if (strcmp(instance->supername, "java/lang/Object") != 0){
 		obj->super = newObject(instance->super);
-	}
+	}*/
+	obj->super = instance->super;
 
 	heap_item = malloc(sizeof(struct Heap));
 	heap_item->id = heap_count;
@@ -131,6 +136,62 @@ struct Array createNewArray(unsigned int num_itens, unsigned int type){
  	heap_count++;
 
 	return array_item;
+}
+
+void setFieldValue(struct Object * obj, char * name, unsigned int value){
+	int i;
+	for(i=0;i<obj->fields_count;i++){
+		if(strcmp(obj->variables[i].name,name)==0){
+			obj->variables[i].element=value;
+		}
+	}
+	//TODO tratar nao encontrado
+}
+
+void setDoubleFieldValue(struct Object * obj, char * name, unsigned int highvalue, unsigned int lowvalue){
+	int i;
+	for(i=0;i<obj->fields_count;i++){
+		if(strcmp(obj->variables[i].name,name)==0){
+			obj->variables[i].element=lowvalue;
+			obj->variables[i].highv=highvalue;
+		}
+	}
+	//TODO tratar nao encontrado
+}
+
+unsigned int getFieldValue(struct Object * obj, char * name){
+	int i;
+	for(i=0;i<obj->fields_count;i++){
+		if(strcmp(obj->variables[i].name,name)==0){
+			return obj->variables[i].element;
+		}
+	}
+	//TODO tratar nao encontrado
+	return 0;
+}
+
+long long getLongFieldValue(struct Object * obj, char * name){
+	int i;
+	for(i=0;i<obj->fields_count;i++){
+		if(strcmp(obj->variables[i].name,name)==0){
+			return toLong(obj->variables[i].highv,obj->variables[i].element);
+		}
+	}
+	//TODO tratar nao encontrado
+	return 0;
+}
+
+double getDoubleFieldValue(struct Object * obj, char * name){
+	int i;
+	double d=0;
+	for(i=0;i<obj->fields_count;i++){
+		if(strcmp(obj->variables[i].name,name)==0){
+			d= toDouble(obj->variables[i].highv,obj->variables[i].element);
+			return d;
+		}
+	}
+	//TODO tratar nao encontrado
+	return 0;
 }
 
 /*
