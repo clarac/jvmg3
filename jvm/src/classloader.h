@@ -25,5 +25,10 @@ static struct class **classes;
 static int c_count=0;
 struct class * getClass(char *pathname);
 struct field * getField(struct class * c, char * name);
-
+void checa(void * ptr);
+struct method * getMethod(struct class * c, char * name);
+struct method * getMethodByCPIndex(struct class * c, unsigned int index);
+char * getMethodNameByCPIndex(struct class * c, unsigned int index);
+char * getMethodClassName(struct class * c, unsigned int index);
+unsigned int getMethodCPIndex(struct class * c, char * name, char * classe);
 #endif /* CLASSLOADER_H_ */

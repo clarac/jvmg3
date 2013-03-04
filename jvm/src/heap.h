@@ -12,6 +12,13 @@ struct Array{
 	unsigned int length;
 };
 
+struct ReferenceArray{
+	unsigned int length;
+	struct Object *arrayref;
+	char *type;
+
+};
+
 struct Array_type{
 	unsigned int id;
 	struct Array *array_element;
@@ -54,4 +61,5 @@ unsigned int getFieldValue(struct Object * obj, char * name);
 long long getLongFieldValue(struct Object * obj, char * name);
 double getDoubleFieldValue(struct Object * obj, char * name);
 void setDoubleFieldValue(struct Object * obj, char * name, unsigned int highvalue, unsigned int lowvalue);
+struct ReferenceArray * createNewObjectArray(unsigned int num_itens, char *type);
 #endif /* HEAP_H_ */

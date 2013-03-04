@@ -5,33 +5,33 @@
 #include <util.h>
 #include <main.h>
 
+void erroFatal(char * mensagem){
+	printf("%s\n",mensagem);
+	exit(EXIT_FAILURE);
+}
 
 
-void executaMetodo(struct method * m, struct Object * obj){
+void executaMetodo(struct method * m){
 	struct code *cod = m->code;
-	int i=0;
 	pc = 0;
 	int op;
 	newFrame(cod->max_locals);
-	if(obj!=NULL){
-		setLocalVar(0,(unsigned int)obj);
-		i=1;
+	if((m->aflags & 0x8) ==0){
+		setLocalVar(0,(unsigned int) curObj);
 	}
-	/* parametros??
-	for(;i<cod->max_locals;i++){
-		setLocalVar(i,pop());
-	}*/
+
 
 	while(pc<cod->code_l){
+
 		pcInc = 1;
 		op=getLastByte(cod->code[pc]);
-		printf("chamando instrucao 0x%X (%d)\n",op,op);
+
+		//printf("chamando instrucao 0x%X (%d)\n",op,op);
 		chamaInst(op,cod);
 		pc+=pcInc;
+
 	}
 
-	//checa se tem parametro, manda bytes correspondentes OU >>>>faz as instrucoes cuidarem disso
-	//testa se estah chamando println ou algo do tipo, simula a funcionalidade
 }
 
 int main(int argc, char *argv[]){
@@ -43,19 +43,33 @@ int main(int argc, char *argv[]){
 	}
 	createHeap();
 	current=getFirst(argv[1]);
-	struct method * m = getMethod(current,"<init>");
-	push(m->code->code_l);
-	push(current);
-	struct Object * o = newObject(current);
-	executaMetodo(m,o);
-	double d=getDoubleFieldValue(o,"d");
-	long long l=getLongFieldValue(o,"e");
 
-	printf("%d\n",getFieldValue(o,"b"));
-	printf("%f\n",toFloat(getFieldValue(o,"c")));
-	printf("%f\n",d);
-	printf("%lld\n",l);
-	//TODO inicializacao: chama metodo <init> depois chama metodo main
+	struct method * m = getMethod(current,"<init>");
+	struct Object * o = newObject(current);
+	curObj=o;
+
+	push(curObj,0);
+	push(m->code->code_l,0);
+	push(current,0);
+
+	executaMetodo(m);
+	return 0;
+
+
+	if(current->has_static==1){
+		m = getMethod(current,"<clinit>");
+		push(m->code->code_l,0);
+		push(current,0);
+		executaMetodo(m);
+	}
+
+
+	m = getMethod(current,"main");
+	push(curObj,0);
+	push(m->code->code_l,0);
+	push(current,0);
+	executaMetodo(m);
+	return 0;
 }
 
 

@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-
+#include <classloader.h>
 #include "heap.h"
 
 
@@ -19,7 +19,8 @@ unsigned int array_count;
 
 
 void createHeap(){
-	heap = malloc(heap_min_size);
+	heap = calloc(1,heap_min_size);
+	checa(heap);
 	heap_count = 0;
 	objects_count = 0;
 	array_count = 0;
@@ -35,6 +36,7 @@ void verifyHeapSpace(){
 		else{
 			printf("Allocating more heap memory.");
 			heap = realloc(heap, used_heap_size + sizeof(struct Heap));
+			checa(heap);
 		}
 	}
 
@@ -48,13 +50,15 @@ struct Object* newObject(struct class *instance){
 	unsigned int cont_variables = 0;
 	unsigned int total_fields, j = 0;
 
-	obj = malloc(sizeof(struct Object));
+	obj = calloc(1,sizeof(struct Object));
+	checa(heap);
 	verifyHeapSpace();
 	obj->id = objects_count;
 	objects_count++;
 
 	total_fields = instance->f_count;
 	obj->variables = calloc(total_fields, sizeof(struct ObjectField));
+	checa(obj->variables);
 	obj->instance = instance;
 	while (j<total_fields){
 		if (((instance->fields[j]->aflags) & 0x0008)==0){ //Static, nao eh variavel da instancia
@@ -67,7 +71,8 @@ struct Object* newObject(struct class *instance){
 		}
 		j++;
 	}
-
+	if(j!=cont_variables)
+		obj->instance->has_static=1;
 	obj->fields_count = cont_variables;
 
 	/*obj->super = NULL;
@@ -75,9 +80,10 @@ struct Object* newObject(struct class *instance){
 	if (strcmp(instance->supername, "java/lang/Object") != 0){
 		obj->super = newObject(instance->super);
 	}*/
-	obj->super = instance->super;
+	//obj->super = instance->super;
 
-	heap_item = malloc(sizeof(struct Heap));
+	heap_item = calloc(1,sizeof(struct Heap));
+	checa(heap_item);
 	heap_item->id = heap_count;
 	heap_item->item.obj_item = obj;
 
@@ -121,6 +127,7 @@ struct Array createNewArray(unsigned int num_itens, unsigned int type){
 	verifyHeapSpace();
 
 	new_array = calloc(num_itens, size);
+	checa(new_array);
 	arrays.id = array_count;
 	array_item.arrayref = new_array;
  	array_item.length = num_itens;
@@ -128,7 +135,8 @@ struct Array createNewArray(unsigned int num_itens, unsigned int type){
  	arrays.size = size;
  	array_count++;
 
- 	heap_item = malloc(sizeof(struct Heap));
+ 	heap_item = calloc(1,sizeof(struct Heap));
+ 	checa(heap_item);
  	heap_item->id = heap_count;
  	heap_item->item.array_item = arrays;
  	heap[heap_count] = heap_item;
@@ -181,6 +189,7 @@ long long getLongFieldValue(struct Object * obj, char * name){
 	return 0;
 }
 
+//TODO arrumar (retornando valor errado)
 double getDoubleFieldValue(struct Object * obj, char * name){
 	int i;
 	double d=0;
@@ -192,6 +201,22 @@ double getDoubleFieldValue(struct Object * obj, char * name){
 	}
 	//TODO tratar nao encontrado
 	return 0;
+}
+
+struct ReferenceArray * createNewObjectArray(unsigned int num_itens, char *type){
+	struct Object **new_array;
+	struct Array_type arrays;
+	struct ReferenceArray * array_item;
+	struct Heap *heap_item;
+
+	verifyHeapSpace();
+
+	new_array = calloc(num_itens, sizeof(struct Object));
+	array_item->arrayref = *new_array;
+ 	array_item->length = num_itens;
+ 	array_item->type = type;
+
+	return array_item;
 }
 
 /*

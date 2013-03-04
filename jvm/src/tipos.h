@@ -54,7 +54,7 @@ struct method{
 
 
 struct class{
-	unsigned int minor_v, major_v, cpc, aflags, this_c, super_c, i_count, f_count, m_count, a_count;
+	unsigned int minor_v, major_v, cpc, aflags, this_c, super_c, i_count, f_count, m_count, a_count, has_static;
 	struct item **cpool;
 	struct field **fields;
 	struct method **methods;

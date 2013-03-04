@@ -40,4 +40,6 @@ unsigned int getLHigh(long long  l);
 
 unsigned int getLlow(long long  l);
 
+unsigned int getLastByte(int a);
+
 #endif /* FPFUNC_H_ */

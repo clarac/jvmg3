@@ -15,7 +15,7 @@
 
 
 unsigned int pop();
-void  push(unsigned int valor);
+void  push(unsigned int valor, char c);
 void newFrame();
 void dropFrame();
 double popDbl();

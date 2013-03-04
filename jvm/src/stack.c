@@ -6,6 +6,7 @@
 
 struct snode{
 	unsigned int valor;
+	char tipo;
 	struct snode *prox;
 };
 
@@ -40,8 +41,8 @@ void pushDbl(double a){
 	unsigned int ah, al;
 	ah=getHigh(a);
 	al=getLow(a);
-	push(ah);
-	push(al);
+	push(ah,0);
+	pushTipo(al,'D');
 }
 
 long long popLong(){
@@ -52,8 +53,8 @@ long long popLong(){
 }
 
 void pushLong(long long l){
-	push(getLHigh(l));
-	push(getLlow(l));
+	push(getLHigh(l),0);
+	pushTipo(getLlow(l),'J');
 }
 /*
  * Funcao que insere um item no topo da pilha
@@ -62,12 +63,32 @@ void pushLong(long long l){
  *
  */
 
-void  push(unsigned int valor){
+void  push(unsigned int valor, char tipo){
 	struct snode *novo = calloc(1,sizeof(struct snode));
+	checa(novo);
 	novo->valor=valor;
+	novo->tipo=tipo;
 	novo->prox=topo;
 	topo=novo;
 
+}
+
+void  pushTipo(unsigned int valor, char tipo){
+	struct snode *novo = calloc(1,sizeof(struct snode));
+	checa(novo);
+	novo->valor=valor;
+	novo->tipo=tipo;
+	novo->prox=topo;
+	topo=novo;
+
+}
+
+char getTipo(){
+	return topo->tipo;
+}
+
+void setTipo(char t){
+	topo->tipo=t;
 }
 
 /*
@@ -77,8 +98,9 @@ void  push(unsigned int valor){
 
 void newFrame(unsigned int lv_size){
 	unsigned int * local = calloc(lv_size, sizeof(unsigned int));
-	push((unsigned int) base);
-	push((unsigned int) local);
+	checa(local);
+	push((unsigned int) base,0);
+	push((unsigned int) local,0);
 	base=topo;
 }
 
@@ -112,8 +134,8 @@ void dropFrame(){
 }
 
 void pushArray(struct Array a){
-	push (a.arrayref);
-	push (a.length);
+	push (a.arrayref,'A');
+	push (a.length,'I');
 }
 
 
@@ -134,7 +156,7 @@ void setLocalVar(int index, int value){
 	unsigned int *  local = (unsigned int *) base->valor;
 	local[index]=value;
 }
-
+/*
 int mainTeste(){
 	unsigned int i;
 
@@ -165,3 +187,4 @@ int mainTeste(){
 	return 0;
 }
 
+*/

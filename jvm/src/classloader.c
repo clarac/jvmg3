@@ -4,10 +4,24 @@
 #include <util.h>
 #include <tipos.h>
 #include <classloader.h>
+#include <main.h>
 
 static char *root;
 char *name;
 
+
+void checa(void * ptr){
+	if(ptr==NULL)
+		erroFatal("OutOfMemoryError");
+}
+
+char leChar(FILE * f){
+	char c;
+	if(fscanf(f,"%c",&c)==EOF){
+		erroFatal("ClassFormatError");
+		return NULL;
+	}else return c;
+}
 
 struct code * readCode(FILE * bc, unsigned int cpc, struct item ** pdc);
 
@@ -23,25 +37,11 @@ struct code * readCode(FILE * bc, unsigned int cpc, struct item ** pdc);
 
 unsigned int pru4(FILE *bc){
 	char c1, c2, c3, c4;
-	int s;
-	s=fscanf(bc,"%c",&c1);
-	if(s==EOF)
-		return 0;
-
-	s=fscanf(bc,"%c",&c2);
-	if(s==EOF)
-		return 0;
-
-	s=fscanf(bc,"%c",&c3);
-	if(s==EOF)
-		return 0;
-
-	s=fscanf(bc,"%c",&c4);
-	if(s==EOF)
-		return 0;
-
+	c1=leChar(bc);
+	c2=leChar(bc);
+	c3=leChar(bc);
+	c4=leChar(bc);
 	unsigned int t = tou4(c1,c2,c3,c4);
-	//printf("%s : %u\n",nome,t);
 	return t;
 }
 
@@ -60,24 +60,15 @@ unsigned int pru4(FILE *bc){
 unsigned int pru2(FILE *bc, unsigned int max){
 	unsigned short ls, tm;
 	char l1, l2;
-	int s;
-	s=fscanf(bc,"%c",&l1);
-	if(s==EOF)
-		return 0;
-
-	s=fscanf(bc,"%c",&l2);
-	if(s==EOF)
-		return 0;
-
+	l1=leChar(bc);
+	l2=leChar(bc);
 	ls=tou2(l1,l2);
 	if(max>0){
 		tm=(unsigned short) max;
 		if(ls==0 || ls>=tm){
-			//printf("erro: indice fora de alcance\n");
-			return 0;
+			erroFatal("ClassFormatError");
 		}
 	}
-
 	return  (unsigned int) ls;
 }
 
@@ -92,9 +83,13 @@ unsigned int pru2(FILE *bc, unsigned int max){
 *
 */
 
-struct item * getN(int n, struct item **pdc){
-	pdc+=n-1;
-	return *pdc;
+struct item * getN(int n, struct item ** cpool,int cpc){
+	if(n>0 && n<cpc){
+		return cpool[n-1];
+	}
+	else
+		erroFatal("ClassFormatError");
+	return NULL;
 }
 
 /*
@@ -221,21 +216,21 @@ void setStrings(struct item **pdc, int tam){
 
 		switch(tag){
 			case 7: //CONSTANT_Class
-				atual->name=getN(atual->name_index,pdc)->string;
+				atual->name=getN(atual->name_index,pdc,tam)->string;
 				break;
 
 			case 9: //CONSTANT_Fieldref
 			case 10: //CONSTANT_Methodref
 			case 11: //CONSTANT_InterfaceMethodref
-				aux=getN(atual->class_index,pdc);
-				aux2=getN(aux->name_index,pdc);
+				aux=getN(atual->class_index,pdc,tam);
+				aux2=getN(aux->name_index,pdc,tam);
 				atual->class=aux2->string;
-				atual->name_and_type=getN(atual->name_and_type_index, pdc);
+				atual->name_and_type=getN(atual->name_and_type_index, pdc,tam);
 
 				break;
 
 			case 8: //CONSTANT_String
-				aux=getN(atual->string_index,pdc);
+				aux=getN(atual->string_index,pdc,tam);
 				atual->string=aux->string;
 				break;
 
@@ -249,10 +244,10 @@ void setStrings(struct item **pdc, int tam){
 				break;
 
 			case 12: //CONSTANT_NameAndType
-				aux=getN(atual->name_index,pdc);
+				aux=getN(atual->name_index,pdc,tam);
 				atual->name=aux->string;
 
-				aux=getN(atual->descriptor_index,pdc);
+				aux=getN(atual->descriptor_index,pdc,tam);
 				atual->descriptor=aux->string;
 				break;
 
@@ -289,16 +284,18 @@ struct attribute ** readAtts(unsigned int count, FILE * bc, unsigned int cpc, st
 	if(count==0)
 		return NULL;
 	atts=calloc(count, sizeof(struct attribute *));
+	checa(atts);
 	first=atts;
 	if(c!=NULL)
 		*c=NULL;
 	for(j=0;j<count;j++){
-		att=malloc(sizeof(struct attribute));
+		att=calloc(1,sizeof(struct attribute));
+		checa(att);
 		*atts=att;
 		atts++;
 
 		att->name_i=pru2(bc,cpc);
-		att->name=getN(att->name_i,pdc)->string;
+		att->name=getN(att->name_i,pdc,cpc)->string;
 		att->length=pru4(bc);
 		if(c!=NULL && strcmp(att->name, "Code")==0){
 			struct code *sc = readCode(bc,cpc,pdc);
@@ -308,10 +305,11 @@ struct attribute ** readAtts(unsigned int count, FILE * bc, unsigned int cpc, st
 		}else {
 			if(att->length>0){
 				att->info=calloc(att->length+1,sizeof(char));
+				checa(att);
 				str=att->info;
 			}
 			for(k=0;k<att->length;k++){
-				fscanf(bc,"%c",&lido);
+				lido=leChar(bc);
 				*str=lido;
 				str++;
 			}
@@ -328,23 +326,23 @@ struct code * readCode(FILE * bc, unsigned int cpc, struct item ** pdc){
 	int j;
 	char l;
 	cod=calloc(1,sizeof(struct code));
+	checa(cod);
 	cod->max_stack=pru2(bc,0);
 	cod->max_locals=pru2(bc,0);
 	cod->code_l=pru4(bc);
 
 	cod->code=calloc(cod->code_l,sizeof(char));
-	if(cod->code==NULL){
-		printf("OOM Error\n");
-		exit(EXIT_FAILURE);
-	}
+	checa(cod);
 	for(j=0;j<cod->code_l;j++){
-		fscanf(bc,"%c",&l);
+		l=leChar(bc);
 		cod->code[j]=l;
 	}
 	cod->et_l=pru2(bc,0);
 	cod->et=calloc(cod->et_l, sizeof(struct exception *));
+	checa(cod->et);
 	for(j=0;j<cod->et_l;j++){
 		exp=calloc(1, sizeof(struct exception));
+		checa(exp);
 		exp->startpc=pru2(bc,0);
 		exp->endpc=pru2(bc,0);
 		exp->handlerpc=pru2(bc,0);
@@ -447,6 +445,11 @@ struct method * getMethodByCPIndex(struct class * c, unsigned int index){
 	return getMethod(getClass(methodInfo->class),methodInfo->name_and_type->name);
 }
 
+char * getMethodNameByCPIndex(struct class * c, unsigned int index){
+	struct item * methodInfo = c->cpool[index-1];
+	return methodInfo->name_and_type->name;
+}
+
 char * getMethodClassName(struct class * c, unsigned int index){
 	struct item * methodInfo = c->cpool[index-1];
 	return methodInfo->class;
@@ -468,6 +471,7 @@ struct class * getClassByName(char * pathname){
 	int i;
 	struct class * thisc;
 	char *name = calloc(strlen(pathname),sizeof(char));
+	checa(name);
 	strcpy(name,pathname);
 	for(i=0;name[i]!='\0';i++){
 		if(name[i]=='.'){
@@ -504,7 +508,6 @@ struct class * getClass(char *pathname){
 	FILE *bc;						// arquivo .class
 	struct item *atual;
 	unsigned int cpc, aux1, aux2,i,j, tag, *it;
-	int s;
 	char lido, stc[4],*cpt, *caminho;
 	struct item **pdc;
 	struct class *thisc;
@@ -523,74 +526,58 @@ struct class * getClass(char *pathname){
 	}
 
 	caminho=calloc(strlen(root)+strlen(pathname), sizeof(char));
+	checa(caminho);
 	strcpy(caminho,root);
 
 	strcat(caminho,pathname);
-	//printf("%s\n",caminho);
 
 	bc=fopen(caminho,"rb");
 
-	if(bc==0){
-		printf("erro ao abrir o arquivo %s\n",caminho);	// confere se o arquivo foi aberto com sucesso
-		return NULL;
-	}
+	if(bc==0)
+		erroFatal("NoClassDefFoundError");
 
-	if(c_count%39==0)
-		i=0;
 	c_count++;
 	classes=realloc(classes,(c_count*sizeof(struct class *)));
-	thisc= malloc(sizeof(struct class));
+	checa(classes);
+	thisc= calloc(1,sizeof(struct class));
+	checa(thisc);
 	classes[c_count-1]=thisc;
 
 	for(i=0;i<4;i++){
-		s=fscanf(bc,"%c",&stc[i]);			// le primeiro u4 (4 bytes)
-		if(s==EOF)
-			return NULL;
+		stc[i]=leChar(bc);			// le primeiro u4 (4 bytes)
 	}
 	if(tou4(stc[0],stc[1],stc[2],stc[3]) != 0xCAFEBABE){	// confere se bate com CAFEBABE
-		printf("erro: arquivo invalido, nao bate com o numero magico 0xCAFEBABE\n");
-		fclose(bc);
-		return NULL;
+		erroFatal("ClassFormatError");
 	}
 
 	//printf("O numero magico eh 0xCAFEBABE\n");		// estah ok, pode ler
 
 	thisc->minor_v=pru2(bc,0);
 	thisc->major_v=pru2(bc,0);
+
+	if(thisc->major_v <45 || thisc->major_v >46 || (thisc->major_v ==46 && thisc->minor_v>0)){
+		erroFatal("UnsupportedClassVersionError");
+	}
+
 	thisc->cpc = cpc=pru2(bc,0);
 
 	atual=NULL;
 	pdc=calloc(cpc-1,sizeof(pdc));					// aloca espaco para vetor de itens
-											// de tamanho cpc-1
+	checa(pdc);										// de tamanho cpc-1
 
 	thisc->cpool = pdc;
 
-	if(pdc==NULL){
-		printf("OOM error!\n");
-		return NULL;
-	}
-
 	for(i=1;i<cpc;i++){					// percorre pool de constantes
-		s=fscanf(bc,"%c",&lido);
-		if(s==EOF)
-			return NULL;
+		lido=leChar(bc);
 		tag = (int) lido;
 		if(tag<1 || tag>12 || tag==2){					// confere se a tag eh valida
-			printf("tag invalida e/ou desconhecida: %d\n cancelando leitura...\n",tag);
-			fclose(bc);
-			return NULL;						// aborta se nao for
+			erroFatal("ClassFormatError");					// aborta se nao for
 		}
 
-		atual=malloc(sizeof(struct item));			// aloca espaco para proximo item
-		if(atual==NULL){
-				printf("OOM error!\n");
-				return NULL;
-		}
+		atual=calloc(1,sizeof(struct item));			// aloca espaco para proximo item
+		checa(atual);
 
 		thisc->cpool[i-1]=atual;
-		//*paux=atual;					// escreve ponteiro para atual na posicao atual do vetor
-		//paux++;							// passa para proxima posicao
-
 
 		atual->tag=(unsigned int) tag;
 
@@ -611,18 +598,12 @@ struct class * getClass(char *pathname){
 				aux2=pru2(bc, cpc);
 				atual->class_index=aux1;
 				atual->name_and_type_index=aux2;
-
-				if(aux1==0 || aux2==0)					//indice invalido ou EOF
-					return NULL;
-
 				break;
 
 			case 8: //CONSTANT_String
 				aux1=pru2(bc, cpc);
 				atual->string_index=aux1;
 
-				if(aux1==0)					//indice invalido ou EOF
-					return NULL;
 				break;
 
 			case 3: //CONSTANT_Integer
@@ -647,19 +628,17 @@ struct class * getClass(char *pathname){
 				aux2=pru2(bc, cpc);
 				atual->name_index=aux1;
 				atual->descriptor_index=aux2;
-				if(aux1==0 || aux2==0)					//indice invalido ou EOF
-					return NULL;
 				break;
 
 			case 1: //CONSTANT_Utf8
 				aux1=pru2(bc, 0);
 				atual->length=aux1;
 				atual->string=calloc(aux1+1, sizeof(char));
+				checa(atual->string);
 				cpt=atual->string;
-				if(cpt==NULL)					// falha para alocar
-					return NULL;
+
 				for(j=0;j<aux1;j++){
-					fscanf(bc,"%c",&lido);
+					lido=leChar(bc);
 					cpt[j]=lido;
 				}
 				cpt[j]='\0';
@@ -674,16 +653,17 @@ struct class * getClass(char *pathname){
 
 	thisc->aflags=pru2(bc,0);
 	thisc->this_c=pru2(bc,0);
-	thisc->super_c=pru2(bc,cpc);
+	thisc->super_c=pru2(bc,0);
 
 	thisc->super=NULL;
 
 	if(thisc->super_c>0)
-		thisc->supername=getN(thisc->super_c,thisc->cpool)->name;
+		thisc->supername=getN(thisc->super_c,thisc->cpool, thisc->cpc)->name;
 
 	thisc->i_count=pru2(bc,0);
-	thisc->name=getN(thisc->this_c,thisc->cpool)->name;
+	thisc->name=getN(thisc->this_c,thisc->cpool, thisc->cpc)->name;
 	it=calloc(thisc->i_count, sizeof(unsigned int));
+	checa(it);
 
 	thisc->interfaces=it;
 
@@ -696,22 +676,22 @@ struct class * getClass(char *pathname){
 
 	if(thisc->f_count>0){
 		fds=calloc(thisc->f_count,sizeof(struct field *));
+		checa(fds);
 		thisc->fields=fds;
 	}
 
 
 	for(i=0;i<thisc->f_count;i++){
-		fd=malloc(sizeof(struct field));
+		fd=calloc(1,sizeof(struct field));
+		checa(fd);
 		fds[i]=fd;
-		//fds++;
-
 		fd->aflags=pru2(bc,0);
 		fd->value_h=0;
 		fd->value_l=0;
 		fd->name_i=pru2(bc,cpc);
-		fd->name=getN(fd->name_i,pdc)->string;
+		fd->name=getN(fd->name_i,pdc,cpc)->string;
 		fd->descriptor_i=pru2(bc,cpc);
-		fd->descriptor=getN(fd->descriptor_i,pdc)->string;
+		fd->descriptor=getN(fd->descriptor_i,pdc,cpc)->string;
 		fd->a_count=pru2(bc,0);
 		fd->atts=readAtts(fd->a_count,bc,thisc->cpc,thisc->cpool,NULL);
 	}
@@ -720,20 +700,21 @@ struct class * getClass(char *pathname){
 
 	if(thisc->m_count>0){
 		mtds=calloc(thisc->m_count, sizeof(struct method *));
+		checa(mtds);
 		thisc->methods=mtds;
 	}
 
 	for(i=0;i<thisc->m_count;i++){
 		//method info
-		mtd=malloc(sizeof(struct method));
+		mtd=calloc(1,sizeof(struct method));
+		checa(mtd);
 		mtds[i]=mtd;
-		//mtds++;
 
 		mtd->aflags=pru2(bc,0);
 		mtd->name_i=pru2(bc,0);
-		mtd->name=getN(mtd->name_i,pdc)->string;
+		mtd->name=getN(mtd->name_i,pdc,cpc)->string;
 		mtd->descriptor_i=pru2(bc,0);
-		mtd->descriptor=getN(mtd->descriptor_i,pdc)->string;
+		mtd->descriptor=getN(mtd->descriptor_i,pdc,cpc)->string;
 		mtd->a_count=pru2(bc,0);
 		mtd->atts=readAtts(mtd->a_count,bc,thisc->cpc,thisc->cpool,&mtd->code);
 	}
@@ -749,7 +730,7 @@ struct class * getClass(char *pathname){
 		i=strlen(root)+ strlen(thisc->supername)+6;
 		if(i>500)
 			pathname=(char *)realloc(pathname,i+100);
-
+		checa(pathname);
 		strcpy(pathname,thisc->supername);
 		strcat(pathname,".class\0");
 		thisc->super=getClass(pathname);
@@ -775,12 +756,13 @@ struct class * getFirst(char * caminho){
 	indice++;
 	name=caminho;
 	root=calloc(indice+1,sizeof(char));
+	checa(root);
 	if(indice>1){
 		root=strncpy(root,name,indice);
 		root[indice]='\0';
 	}
 	//TODO checar root de acordo com 1a classe, ajustar se necessário!
-	//TODO NoClassDefFoundError, ClassFormatError, UnsupportedClassVersionError, ClassCircularityError,IncompatibleClassChangeError
+	//TODO NoClassDefFoundError, ClassCircularityError,IncompatibleClassChangeError
 
 	//TODO NoSuchFieldError, NoSuchMethodError
 
@@ -789,12 +771,12 @@ struct class * getFirst(char * caminho){
 		root[0]='\0';
 	}
 	name=calloc(500+indice,sizeof(char));
+	checa(name);
 	strcpy(name,caminho);
 	name+=indice;
 
 	return getClass(name);
 
-	//printf("Total de %d classes carregadas\n",c_count);
 
 }
 
