@@ -75,12 +75,11 @@ struct Object* newObject(struct class *instance){
 		obj->instance->has_static=1;
 	obj->fields_count = cont_variables;
 
-	/*obj->super = NULL;
+	obj->super = NULL;
 
-	if (strcmp(instance->supername, "java/lang/Object") != 0){
+	if (instance->super!=NULL && strcmp(instance->supername, "java/lang/Object") != 0){
 		obj->super = newObject(instance->super);
-	}*/
-	//obj->super = instance->super;
+	}
 
 	heap_item = calloc(1,sizeof(struct Heap));
 	checa(heap_item);
@@ -151,9 +150,12 @@ void setFieldValue(struct Object * obj, char * name, unsigned int value){
 	for(i=0;i<obj->fields_count;i++){
 		if(strcmp(obj->variables[i].name,name)==0){
 			obj->variables[i].element=value;
+			return;
 		}
 	}
-	//TODO tratar nao encontrado
+	if(obj->super!=NULL)
+		return setFieldValue(obj->super,name,value);
+	erroFatal("NoSuchFieldError");
 }
 
 void setDoubleFieldValue(struct Object * obj, char * name, unsigned int highvalue, unsigned int lowvalue){
@@ -162,9 +164,12 @@ void setDoubleFieldValue(struct Object * obj, char * name, unsigned int highvalu
 		if(strcmp(obj->variables[i].name,name)==0){
 			obj->variables[i].element=lowvalue;
 			obj->variables[i].highv=highvalue;
+			return;
 		}
 	}
-	//TODO tratar nao encontrado
+	if(obj->super!=NULL)
+		return setDoubleFieldValue(obj->super,name,highvalue,lowvalue);
+	erroFatal("NoSuchFieldError");
 }
 
 unsigned int getFieldValue(struct Object * obj, char * name){
@@ -174,7 +179,9 @@ unsigned int getFieldValue(struct Object * obj, char * name){
 			return obj->variables[i].element;
 		}
 	}
-	//TODO tratar nao encontrado
+	if(obj->super!=NULL)
+		return getFieldValue(obj->super,name);
+	erroFatal("NoSuchFieldError");
 	return 0;
 }
 
@@ -185,11 +192,13 @@ long long getLongFieldValue(struct Object * obj, char * name){
 			return toLong(obj->variables[i].highv,obj->variables[i].element);
 		}
 	}
-	//TODO tratar nao encontrado
+	if(obj->super!=NULL)
+		return getLongFieldValue(obj->super,name);
+	erroFatal("NoSuchFieldError");
 	return 0;
 }
 
-//TODO arrumar (retornando valor errado)
+//TODO arrumar (retornando valor errado?)
 double getDoubleFieldValue(struct Object * obj, char * name){
 	int i;
 	double d=0;
@@ -199,7 +208,9 @@ double getDoubleFieldValue(struct Object * obj, char * name){
 			return d;
 		}
 	}
-	//TODO tratar nao encontrado
+	if(obj->super!=NULL)
+		return getDoubleFieldValue(obj->super,name);
+	erroFatal("NoSuchFieldError");
 	return 0;
 }
 

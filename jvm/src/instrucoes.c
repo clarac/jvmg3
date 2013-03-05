@@ -83,7 +83,7 @@ void anewarray(){
 	unsigned int i = pop();
 	struct ReferenceArray *n;
 	n = createNewObjectArray(i, c->name);
-	push(a,'A');
+	push((unsigned int)a,'A');
 }
 
 void new(){
@@ -91,10 +91,10 @@ void new(){
 	struct item * a = current->cpool[index-1];
 	struct class *c;
 	struct Object *n;
-	c = getClass(a->class);
+	c = getClass(a->name);
 
 	n = newObject(c);
-	push(n,'O');
+	push((unsigned int)n,'O');
 }
 
 /* TODO Tenho minhas duvidas a respeito dessa instrucao... */
@@ -112,13 +112,13 @@ void multianewarray(){
 	c = getClass(k->class);
 	struct ReferenceArray *n;
 	n = createNewObjectArray(temp, c->name);
-	push(n,'A');
+	push((unsigned int)n,'A');
 }
 
 void aaload(){
 	unsigned int i=pop();
 	struct ReferenceArray *a;
-	a = pop();
+	a = (struct ReferenceArray *)pop();
 	if (a->arrayref == NULL){
 		printf("NullPointerException\n");
 		exit(EXIT_FAILURE);
@@ -134,10 +134,10 @@ void aaload(){
 
 void aastore(){
 	struct Object *l;
-	l = pop();
+	l = (struct Object *) pop();
 	unsigned int i = pop();
 	struct ReferenceArray *a;
-	a = pop();
+	a = (struct ReferenceArray *)pop();
 	if (a->arrayref == NULL){
 		printf("NullPointerException\n");
 		exit(EXIT_FAILURE);
@@ -159,7 +159,7 @@ struct Array popArray(){
 }
 
 void aconst_null (){
-	pushTipo(0,'C');
+	push(0,'C');
 }
 
 void dadd(){
@@ -184,15 +184,15 @@ void dcmpg (){
 	b=popDbl();
 	a=popDbl();
 	if(isNaN(a)!=0 || isNaN(b)!=0){
-		pushTipo(1,'T');
+		push(1,'T');
 	}
 	else{
 		if(a>b)
-			pushTipo(1,'T');
+			push(1,'T');
 		else if(a==b)
-			pushTipo(0,'T');
+			push(0,'T');
 		else
-			pushTipo(-1,'T');
+			push(-1,'T');
 	}
 }
 
@@ -201,15 +201,15 @@ void dcmpl (){
 	b=popDbl();
 	a=popDbl();
 	if(isNaN(a)!=0 || isNaN(b)!=0){
-		pushTipo(-1,'T');
+		push(-1,'T');
 	}
 	else{
 		if(a>b)
-			pushTipo(1,'T');
+			push(1,'T');
 		else if(a==b)
-			pushTipo(0,'T');
+			push(0,'T');
 		else
-			pushTipo(-1,'T');
+			push(-1,'T');
 	}
 }
 
@@ -273,8 +273,8 @@ void dneg(){
 void dup(){
 	char t = getTipo();
 	unsigned int a = pop();
-	pushTipo(a,t);
-	pushTipo(a,t);
+	push(a,t);
+	push(a,t);
 }
 
 void swap(){
@@ -283,8 +283,8 @@ void swap(){
 	unsigned int a = pop();
 	bt=getTipo();
 	unsigned int b = pop();
-	pushTipo(a,at);
-	pushTipo(b,bt);
+	push(a,at);
+	push(b,bt);
 }
 
 void dup_x1(){
@@ -293,9 +293,9 @@ void dup_x1(){
 	unsigned int a = pop();
 	bt=getTipo();
 	unsigned int b = pop();
-	pushTipo(a,at);
-	pushTipo(b,bt);
-	pushTipo(a,at);
+	push(a,at);
+	push(b,bt);
+	push(a,at);
 }
 
 void dup_x2(){
@@ -306,10 +306,10 @@ void dup_x2(){
 	unsigned int b = pop();
 	ct = getTipo();
 	unsigned int c = pop();
-	pushTipo(a,at);
-	pushTipo(c,ct);
-	pushTipo(b,bt);
-	pushTipo(a,at);
+	push(a,at);
+	push(c,ct);
+	push(b,bt);
+	push(a,at);
 }
 
 void dup2(){
@@ -317,10 +317,10 @@ void dup2(){
 	unsigned int a = pop();
 	char bt = getTipo();
 	unsigned int b = pop();
-	pushTipo(b,bt);
-	pushTipo(a,at);
-	pushTipo(b,bt);
-	pushTipo(a,at);
+	push(b,bt);
+	push(a,at);
+	push(b,bt);
+	push(a,at);
 }
 
 void dup2_x1(){
@@ -330,11 +330,11 @@ void dup2_x1(){
 	unsigned int b = pop();
 	char ct = getTipo();
 	unsigned int c = pop();
-	pushTipo(b,bt);
-	pushTipo(a,at);
-	pushTipo(c,ct);
-	pushTipo(b,bt);
-	pushTipo(a,at);
+	push(b,bt);
+	push(a,at);
+	push(c,ct);
+	push(b,bt);
+	push(a,at);
 }
 
 void dup2_x2(){
@@ -346,12 +346,12 @@ void dup2_x2(){
 	unsigned int c = pop();
 	char dt = getTipo();
 	unsigned int d = pop();
-	pushTipo(b,bt);
-	pushTipo(a,at);
-	pushTipo(d,dt);
-	pushTipo(c,ct);
-	pushTipo(b,bt);
-	pushTipo(a,at);
+	push(b,bt);
+	push(a,at);
+	push(d,dt);
+	push(c,ct);
+	push(b,bt);
+	push(a,at);
 }
 /*
 void aaload(){
@@ -361,34 +361,34 @@ void aaload(){
 		exit(EXIT_FAILURE);
 	}
 	unsigned int index = pop();
-	pushTipo((unsigned int )arrayref[index],'A');
+	push((unsigned int )arrayref[index],'A');
 }
 */
 
 void aload(){
 	unsigned int index = getByte();
 	unsigned int a = getLocalVar(index);
-	pushTipo(a,'C');
+	push(a,'C');
 }
 
 void aload_0(){
 	unsigned int a = getLocalVar(0);
-	pushTipo(a,'C');
+	push(a,'C');
 }
 
 void aload_1(){
 	unsigned int a = getLocalVar(1);
-	pushTipo(a,'C');
+	push(a,'C');
 }
 
 void aload_2(){
 	unsigned int a = getLocalVar(2);
-	pushTipo(a,'C');
+	push(a,'C');
 }
 
 void aload_3(){
 	unsigned int a = getLocalVar(3);
-	pushTipo(a,'C');
+	push(a,'C');
 }
 
 void astore(){
@@ -419,7 +419,7 @@ void astore_3(){
 
 void bipush(){
 	int byte = getSignedByte();
-	pushTipo(byte,'I');
+	push(byte,'I');
 }
 
 void dload(){
@@ -514,7 +514,7 @@ void fadd(){
 	f1=toFloat(pop());
 	f2=toFloat(pop());
 	f1+=f2;
-	pushTipo(getBytes(f1),'F');
+	push(getBytes(f1),'F');
 }
 
 void fcmpg (){
@@ -522,14 +522,14 @@ void fcmpg (){
 	f2=toFloat(pop());
 	f1=toFloat(pop());
 	if(isNaNF(f1)||isNaNF(f2)){
-		pushTipo(1,'T');
+		push(1,'T');
 	} else{
 		if(f1>f2)
-			pushTipo(1,'T');
+			push(1,'T');
 		else if (f1==f2)
-			pushTipo(0,'T');
+			push(0,'T');
 		else
-			pushTipo(-1,'T');
+			push(-1,'T');
 	}
 }
 
@@ -539,27 +539,27 @@ void fcmpl (){
 	f2=toFloat(pop());
 	f1=toFloat(pop());
 	if(isNaNF(f1)||isNaNF(f2)){
-		pushTipo(-1,'T');
+		push(-1,'T');
 	} else{
 		if(f1>f2)
-			pushTipo(1,'T');
+			push(1,'T');
 		else if (f1==f2)
-			pushTipo(0,'T');
+			push(0,'T');
 		else
-			pushTipo(-1,'T');
+			push(-1,'T');
 	}
 }
 
 void fconst_0 (){
-	pushTipo(0.0F,'F');
+	push(0.0F,'F');
 }
 
 void fconst_1 (){
-	pushTipo(getBytes(1.0),'F');
+	push(getBytes(1.0),'F');
 }
 
 void fconst_2 (){
-	pushTipo(getBytes(2.0),'F');
+	push(getBytes(2.0),'F');
 }
 
 void fdiv(){
@@ -567,33 +567,33 @@ void fdiv(){
 	f2=toFloat(pop());
 	f1=toFloat(pop());
 	f1/=f2;
-	pushTipo(getBytes(f1),'F');
+	push(getBytes(f1),'F');
 }
 
 void fload (){
 	unsigned int index = getByte();
 	unsigned int a = getLocalVar(index);
-	pushTipo(a,'F');
+	push(a,'F');
 }
 
 void fload_0 (){
 	unsigned int a = getLocalVar(0);
-	pushTipo(a,'F');
+	push(a,'F');
 }
 
 void fload_1 (){
 	unsigned int a = getLocalVar(1);
-	pushTipo(a,'F');
+	push(a,'F');
 }
 
 void fload_2 (){
 	unsigned int a = getLocalVar(2);
-	pushTipo(a,'F');
+	push(a,'F');
 }
 
 void fload_3 (){
 	unsigned int a = getLocalVar(3);
-	pushTipo(a,'F');
+	push(a,'F');
 }
 
 void fmul(){
@@ -601,13 +601,13 @@ void fmul(){
 	f2=toFloat(pop());
 	f1=toFloat(pop());
 	f1*=f2;
-	pushTipo(getBytes(f1),'T');
+	push(getBytes(f1),'T');
 }
 
 void fneg(){
 	float f1;
 	f1=toFloat(pop());
-	pushTipo(getBytes(0-f1),'T');
+	push(getBytes(0-f1),'T');
 }
 
 void frem(){
@@ -616,13 +616,13 @@ void frem(){
 	b=toFloat(pop());
 	a=toFloat(pop());
 	if(isNaN(a)||isNaN(b)||b==0.0){
-		pushTipo(getBytes(a),'T');
+		push(getBytes(a),'T');
 	} else if(a==0){
-		pushTipo(getBytes(0.0),'T');
+		push(getBytes(0.0),'T');
 	}else{
 		q=(int)a/b;
 		r=a-b*q;
-		pushTipo(getBytes(r),'T');
+		push(getBytes(r),'T');
 	}
 
 }
@@ -632,7 +632,7 @@ void fsub(){
 	f2=toFloat(pop());
 	f1=toFloat(pop());
 	f1-=f2;
-	pushTipo(getBytes(f1),'T');
+	push(getBytes(f1),'T');
 }
 
 void fstore (){
@@ -702,6 +702,9 @@ void castore(){
 
 void newarray(){
 	int type = getSignedByte();
+	if(type<0){
+		erroFatal("NegativeArraySizeException");
+	}
 	struct Array a;
 	unsigned int i = pop();
 	a = createNewArray(i,type);
@@ -1271,7 +1274,7 @@ void lxor(){
 	ixor();
 	xl=pop();
 	push(xh,0);
-	pushTipo(xl,'J');
+	push(xl,'J');
 }
 
 void nop(){
@@ -1294,7 +1297,7 @@ void sipush(){
 
 void putstatic(){
 	unsigned int index = getShort();
-	struct item * a = current->cpool[index-1];
+	struct item * a = mainClass->cpool[index-1];
 	struct class *c;
 	struct field *f;
 	if(a->tag==9){ //field
@@ -1312,7 +1315,7 @@ void putstatic(){
 
 void getstatic(){
 	unsigned int index = getShort();
-	struct item * a = current->cpool[index-1];
+	struct item * a = mainClass->cpool[index-1];
 	struct class *c;
 	struct field *f;
 	if(a->tag==9){ //field
@@ -1324,7 +1327,7 @@ void getstatic(){
 			if(strcmp(f->descriptor,"D")==0 || strcmp(f->descriptor,"J")==0 ){ //double ou long?
 				push(f->value_h,0);
 			}
-			pushTipo(f->value_l,f->descriptor[0]);
+			push(f->value_l,f->descriptor[0]);
 
 		}
 	}
@@ -1357,17 +1360,17 @@ is pushed onto the operand stack.
 	//TODO checar com tamanho (ldc_w, ldc2_w)
 	switch(a->tag){
 		case 3: //int
-			pushTipo(a->bytes,'I');
+			push(a->bytes,'I');
 			break;
 		case 4: //float
-			pushTipo(a->bytes,'F');
+			push(a->bytes,'F');
 			break;
 		case 8: //string
-			pushTipo((unsigned int)a->string,'S');
+			push((unsigned int)a->string,'S');
 			break;
 		case 7: //class
 			c=getClass(a->name);
-			pushTipo((unsigned int)c,'C');
+			push((unsigned int)c,'C');
 			break;
 	} //TODO method handles ?
 }
@@ -1404,7 +1407,7 @@ void ldc2_w(){
 	 * that run-time constant is pushed onto the operand stack as a long or double, respectively.
 	 */
 	struct item *a;
-	struct class *c;
+
 	unsigned int index = getShort();
 
 	a=current->cpool[index-1];
@@ -1636,47 +1639,58 @@ void lastore(){
 }
 
 void invokespecial(){
-	//TODO args??
+
 	unsigned int index = getShort();
 	struct method * m;
 	char * className;
-	struct Object * obj = pop();
 
-	m = getMethodByCPIndex(current,index);
-	className=getMethodClassName(current,index);
-	push(curObj,0);
+	struct Object * obj =(struct Object *) pop();
+
+	m = getMethodByCPIndex(mainClass,index);
+	if(m->code->code_l<2)
+		return;
+	className=getMethodClassName(mainClass,index);
+
+	push((unsigned int)curObj,0);
 	push(pc,0);
-
-	push(current,0);
-
+	push((unsigned int)current,0);
+	//printf("curobj=0x%X\n",(unsigned int)curObj);
+	//printf("pc=%d\n",pc);
+	//printf("curennt=0x%X\n",(unsigned int)current);
 	current = getClass(className);
 	curObj = obj;
-
 	executaMetodo(m);
+
 	pcInc=2;
 }
 
 void invokestatic(){
 	//TODO args??
-	//TODO bug
 	unsigned int index = getShort();
 	struct method * m;
 	char * className;
 	m = getMethodByCPIndex(current,index);
+	if(m->code->code_l<2)
+		return;
 	className=getMethodClassName(current,index);
-	push(curObj,0);
-	push(pc,0);
-	push(current,0);
+	//push((unsigned int)curObj,0);
+	//push((unsigned int)pc,0);
+	//push((unsigned int)current,0);
 	current = getClass(className);
 	executaMetodo(m);
 	pcInc=2;
 }
 
 void return_(){
+
 	dropFrame();
 	current=(struct class *)pop();
+	//printf("curennt=0x%X\n",(unsigned int)current);
 	pc=pop();
-	curObj = pop();
+	//printf("pc=%d\n",pc);
+	if(estatico==0)
+		curObj = (struct Object *)pop();
+	//printf("curobj=0x%X\n",(unsigned int)curObj);
 	pcInc=1;
 }
 
@@ -1732,15 +1746,16 @@ void putfield(){
 	unsigned int value = pop();
 	unsigned int vh;
 	struct Object * obj;
+	//char * descriptor = curObj->instance->cpool[index-1]->name_and_type->descriptor;
 	char * descriptor = current->cpool[index-1]->name_and_type->descriptor;
 	if(strcmp(descriptor,"D")==0 || strcmp(descriptor,"J")==0 ){ // double ou long
 		vh = pop();
 		obj = (struct Object *) pop();
-		char * name = obj->instance->cpool[index-1]->name_and_type->name;
+		char * name = current->cpool[index-1]->name_and_type->name;
 		setDoubleFieldValue(obj,name,vh,value);
 	} else {
 		obj = (struct Object *) pop();
-		char * name = obj->instance->cpool[index-1]->name_and_type->name;
+		char * name = current->cpool[index-1]->name_and_type->name;
 		setFieldValue(obj,name,value);
 	}
 }
@@ -1748,12 +1763,16 @@ void putfield(){
 void invokevirtual(){
 	//TODO args??
 	unsigned int index = getShort();
-	unsigned int a, b;
+	unsigned int a;
 	struct method * m;
-	char * className, *mName, tipo;
+	char * className, *mName, tipo, *desc;
 	char * str;
-	className=getMethodClassName(current,index);
-	mName=getMethodNameByCPIndex(current,index);
+	struct item * i = mainClass->cpool[index-1];
+	//className=getMethodClassName(current,index);
+	//mName=getMethodNameByCPIndex(current,index);
+	className = i->class;
+	mName = i->name_and_type->name;
+	desc = i->name_and_type->descriptor;
 	if(strcmp(className,"java/lang/StringBuilder")==0 || strcmp(className,"java\\lang\\StringBuilder")==0){
 
 	}
@@ -1778,14 +1797,23 @@ void invokevirtual(){
 			case 'J':
 				printf("%lld",popLong());
 				break;
+			case 'B':
+				a = pop();
+				if(a==0)
+					printf("false");
+				else
+					printf("true");
+				break;
 		}
 		if(strcmp(mName,"println")==0)
 			printf("\n");
 	} else{
-		m = getMethodByCPIndex(current,index);
-		push(curObj,0);
+		m = getMethod(getClass(className),mName,desc);
+		if(m->code->code_l<2)
+			return;
+		//push((unsigned int)curObj,0);
 		push(pc,0);
-		push(current,0);
+		push((unsigned int)current,0);
 		current = getClass(className);
 		executaMetodo(m); //TODO arrumar!!
 		pcInc=2;
@@ -1823,16 +1851,30 @@ void ret(){
 
 void tableswitch(){}
 void lookupswitch(){}
-
-
 void invokeinterface(){}
-void invokedynamic(){}
-void athrow(){}
-void checkcast(){}
-void instanceof(){}
-void monitorenter(){}
-void monitorexit(){}
-void wide(){}
+
+
+void invokedynamic(){
+	erroFatal("Instrucao nao implementada: invokedynamic");
+}
+void athrow(){
+	erroFatal("Instrucao nao implementada: athrow");
+}
+void checkcast(){
+	erroFatal("Instrucao nao implementada: checkcast");
+}
+void instanceof(){
+	erroFatal("Instrucao nao implementada: instanceof");
+}
+void monitorenter(){
+	erroFatal("Instrucao nao implementada: monitorenter");
+}
+void monitorexit(){
+	erroFatal("Instrucao nao implementada: monitorexit");
+}
+void wide(){
+	erroFatal("Instrucao nao implementada: wide");
+}
 
 
 

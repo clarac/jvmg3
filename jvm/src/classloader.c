@@ -19,7 +19,7 @@ char leChar(FILE * f){
 	char c;
 	if(fscanf(f,"%c",&c)==EOF){
 		erroFatal("ClassFormatError");
-		return NULL;
+		return 0;
 	}else return c;
 }
 
@@ -420,49 +420,95 @@ void printClass(struct class * thisc){
 
 struct field * getField(struct class * c, char * name){
 	int i;
+	checa(c);
 	for(i=0;i<c->f_count;i++){
+		checa(c->fields);
 		if(strcmp(name,c->fields[i]->name)==0){
 			return c->fields[i];
 		}
 	}
-	//TODO tratar nao encontrado
+	erroFatal("NoSuchFieldError");
 	return NULL;
 }
 
-struct method * getMethod(struct class * c, char * name){
+struct method * getMethod(struct class * c, char * name, char * descriptor){
+	checa(c);
 	int i;
 	for(i=0;i<c->m_count;i++){
-		if(strcmp(name,c->methods[i]->name)==0){
+		if(strcmp(name,c->methods[i]->name)==0 && strcmp(descriptor,c->methods[i]->descriptor)==0){
 			return c->methods[i];
 		}
 	}
-	//TODO tratar nao encontrado
+	if(c->super!=NULL)
+		return getMethod(c->super,name, descriptor);
+	//printf("%s\n%s\n",name, descriptor);
+	erroFatal("NoSuchMethodError");
 	return NULL;
 }
 
 struct method * getMethodByCPIndex(struct class * c, unsigned int index){
-	struct item * methodInfo = c->cpool[index-1];
-	return getMethod(getClass(methodInfo->class),methodInfo->name_and_type->name);
+	checa(c);
+	if(index>0 && index < c->cpc){
+		struct item * methodInfo = c->cpool[index-1];
+		if(methodInfo->tag==10){
+			return getMethod(getClass(methodInfo->class),methodInfo->name_and_type->name,methodInfo->name_and_type->descriptor);
+		}
+	}
+	//if(c->super!=NULL)
+	//	return getMethodByCPIndex(c->super, index);
+	if(c!=current)
+		return getMethodByCPIndex(current, index);
+	erroFatal("NoSuchMethodError");
+	return NULL;
 }
 
 char * getMethodNameByCPIndex(struct class * c, unsigned int index){
-	struct item * methodInfo = c->cpool[index-1];
-	return methodInfo->name_and_type->name;
+	checa(c);
+	if(index>0 && index < c->cpc){
+		struct item * methodInfo = c->cpool[index-1];
+		checa(methodInfo);
+		if(methodInfo->tag==10){
+			checa(methodInfo->name_and_type);
+			return methodInfo->name_and_type->name;
+		}
+	}
+	if(c!=current)
+		return getMethodNameByCPIndex(current, index);
+	erroFatal("NoSuchMethodError");
+	return NULL;
 }
 
 char * getMethodClassName(struct class * c, unsigned int index){
-	struct item * methodInfo = c->cpool[index-1];
-	return methodInfo->class;
-}
-
-unsigned int getMethodCPIndex(struct class * c, char * name, char * classe){
-	int i;
-	for(i=0;i<c->cpc-1;i++){
-		if(c->cpool[i]!=NULL && c->cpool[i]->tag ==10  && strcmp(name,c->cpool[i]->name_and_type->name)==0 && strcmp(classe, c->cpool[i]->class)==0){
-			return i+1;
+	checa(c);
+	if(index>0 && index < c->cpc){
+		struct item * methodInfo = c->cpool[index-1];
+		checa(methodInfo);
+		if(methodInfo->tag==10){
+			return methodInfo->class;
 		}
 	}
-	//TODO tratar nao encontrado
+	if(c!=current)
+		return getMethodClassName(current, index);
+	erroFatal("NoSuchMethodError");
+	return NULL;
+}
+
+unsigned int getMethodCPIndex(struct class * c, char * name, char * classe, char * descriptor){
+	int i;
+	checa(c);
+	checa(c->cpool);
+	for(i=0;i<c->cpc-1;i++){
+		if(c->cpool[i]!=NULL && c->cpool[i]->tag ==10){
+			checa(c->cpool[i]->name_and_type);
+			if (strcmp(name,c->cpool[i]->name_and_type->name)==0 && strcmp(classe, c->cpool[i]->class)==0 && strcmp(descriptor,c->cpool[i]->name_and_type->descriptor)==0){
+				return i+1;
+			}
+
+		}
+	}
+	if(c!=current)
+		return getMethodCPIndex(current, name, classe,descriptor);
+	erroFatal("NoSuchMethodError");
 	return 0;
 }
 
@@ -470,18 +516,19 @@ unsigned int getMethodCPIndex(struct class * c, char * name, char * classe){
 struct class * getClassByName(char * pathname){
 	int i;
 	struct class * thisc;
-	char *name = calloc(strlen(pathname),sizeof(char));
-	checa(name);
-	strcpy(name,pathname);
-	for(i=0;name[i]!='\0';i++){
-		if(name[i]=='.'){
-			name[i]='\0';
+	char *nameaux = calloc(strlen(pathname),sizeof(char));
+	checa(nameaux);
+	strcpy(nameaux,pathname);
+	for(i=0;nameaux[i]!='\0';i++){
+		if(nameaux[i]=='.'){
+			nameaux[i]='\0';
 			i--;
 		}
 	}
 	for(i=0;i<c_count;i++){
 		thisc=classes[i];
-		if(strcmp(thisc->name,name)==0){
+		checa(thisc);
+		if(strcmp(thisc->name,nameaux)==0){
 			return thisc;
 		}
 	}
@@ -513,29 +560,35 @@ struct class * getClass(char *pathname){
 	struct class *thisc;
 	struct field *fd, **fds;
 	struct method *mtd, **mtds;
-
-
-	thisc=getClassByName(pathname);
+	int ponto=0;
+	if(pathname!=name){
+		strcpy(name,pathname);
+	}
+	thisc=getClassByName(name);
 	if(thisc!=NULL)
 		return thisc;
 
 
-	for(i=0;pathname[i]!='\0';i++){
-		if(pathname[i]=='/')
-			pathname[i]='\\';
+	for(i=0;name[i]!='\0';i++){
+		if(name[i]=='.')
+			ponto=1;
+		if(name[i]=='/')
+			name[i]='\\';
 	}
-
-	caminho=calloc(strlen(root)+strlen(pathname), sizeof(char));
+	if(ponto==0)
+		strcat(name,".class");
+	caminho=calloc(strlen(root)+strlen(name), sizeof(char));
 	checa(caminho);
 	strcpy(caminho,root);
 
-	strcat(caminho,pathname);
+	strcat(caminho,name);
 
 	bc=fopen(caminho,"rb");
 
-	if(bc==0)
+	if(bc==0){
+		erroMsg=caminho;
 		erroFatal("NoClassDefFoundError");
-
+	}
 	c_count++;
 	classes=realloc(classes,(c_count*sizeof(struct class *)));
 	checa(classes);
@@ -729,13 +782,13 @@ struct class * getClass(char *pathname){
 	if(thisc->super_c>0){
 		i=strlen(root)+ strlen(thisc->supername)+6;
 		if(i>500)
-			pathname=(char *)realloc(pathname,i+100);
-		checa(pathname);
-		strcpy(pathname,thisc->supername);
-		strcat(pathname,".class\0");
-		thisc->super=getClass(pathname);
+			name=(char *)realloc(name,i+100);
+		checa(name);
+		strcpy(name,thisc->supername);
+		strcat(name,".class\0");
+		thisc->super=getClass(name);
 	}
-
+	iniciaClasse(thisc);
 	return thisc;
 }
 
@@ -763,8 +816,6 @@ struct class * getFirst(char * caminho){
 	}
 	//TODO checar root de acordo com 1a classe, ajustar se necessário!
 	//TODO NoClassDefFoundError, ClassCircularityError,IncompatibleClassChangeError
-
-	//TODO NoSuchFieldError, NoSuchMethodError
 
 	else{
 		indice--;

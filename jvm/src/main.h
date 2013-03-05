@@ -12,10 +12,12 @@
 #include <heap.h>
 #include <stdlib.h>
 
-struct class * current;
+struct class * current, *mainClass;
 struct Object * curObj;
-int pc, pcInc;
+int pc, pcInc, estatico;
+char * erroMsg;
 
 void executaMetodo();
 void erroFatal(char * mensagem);
+void iniciaClasse(struct class * c);
 #endif /* MAIN_H_ */

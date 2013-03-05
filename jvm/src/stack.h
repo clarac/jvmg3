@@ -26,5 +26,7 @@ long long popLong();
 void pushLong(long long l);
 struct Array popArray();
 void pushArray(struct Array a);
-
+void mainTeste();
+char getTipo();
+void setTipo(char t);
 #endif /* STACK_ */
