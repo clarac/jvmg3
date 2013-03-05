@@ -600,13 +600,13 @@ void fmul(){
 	f2=toFloat(pop());
 	f1=toFloat(pop());
 	f1*=f2;
-	push(getBytes(f1),'T');
+	push(getBytes(f1),'F');
 }
 
 void fneg(){
 	float f1;
 	f1=toFloat(pop());
-	push(getBytes(0-f1),'T');
+	push(getBytes(0-f1),'F');
 }
 
 void frem(){
@@ -615,13 +615,13 @@ void frem(){
 	b=toFloat(pop());
 	a=toFloat(pop());
 	if(isNaN(a)||isNaN(b)||b==0.0){
-		push(getBytes(a),'T');
+		push(getBytes(a),'F');
 	} else if(a==0){
-		push(getBytes(0.0),'T');
+		push(getBytes(0.0),'F');
 	}else{
 		q=(int)a/b;
 		r=a-b*q;
-		push(getBytes(r),'T');
+		push(getBytes(r),'F');
 	}
 
 }
@@ -631,7 +631,7 @@ void fsub(){
 	f2=toFloat(pop());
 	f1=toFloat(pop());
 	f1-=f2;
-	push(getBytes(f1),'T');
+	push(getBytes(f1),'F');
 }
 
 void fstore (){
