@@ -831,18 +831,18 @@ void dastore(){
 
 
 void i2l(){
-	unsigned int i = pop();
+	int i = pop();
 	pushLong((long long)i);
 }
 
 void i2f(){
-	unsigned int i = pop();
+	int i = pop();
 	float f = i+0.0;
 	push(getBytes(f),'F');
 }
 
 void i2d(){
-	unsigned int i = pop();
+	int i = pop();
 	double d = i+0.0;
 	pushDbl(d);
 }
