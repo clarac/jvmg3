@@ -1614,13 +1614,13 @@ void laload(){
 		printf("ArrayVarOutOfBoundsException\n");
 		exit(EXIT_FAILURE);
 	}
-	pushLong(((long int *)a->arrayref)[i]);
+	pushLong(((long long *)a->arrayref)[i]);
 
 
 }
 
 void lastore(){
-	long int l=popLong();
+	long long l=popLong();
 	unsigned int i =pop();
 	struct Array *a;
 	a = popArray();
@@ -1632,7 +1632,7 @@ void lastore(){
 		printf("ArrayVarOutOfBoundsException\n");
 		exit(EXIT_FAILURE);
 	}
-	((long int*) a->arrayref)[i] = l;
+	((long long*) a->arrayref)[i] = l;
 
 
 }

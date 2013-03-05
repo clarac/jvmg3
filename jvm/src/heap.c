@@ -9,9 +9,9 @@
 #define HEAP_SIZE (134217728/5)
 
 //Esses valores serao os padroes, mas eh necessario verificar se foram definidos outros valores
-unsigned long int heap_min_size = HEAP_SIZE;
-unsigned long int heap_max_size = HEAP_SIZE * 1.5;
-unsigned long int used_heap_size;
+unsigned long long heap_min_size = HEAP_SIZE;
+unsigned long long heap_max_size = HEAP_SIZE * 1.5;
+unsigned long long used_heap_size;
 
 unsigned int heap_count;
 unsigned int objects_count;
@@ -100,7 +100,7 @@ struct Object* newObject(struct class *instance){
 struct Array * createNewArray(unsigned int num_itens, unsigned int type){
 	void *new_array;
 	struct Array_type arrays;
-	struct Array array_item;
+	struct Array * array_item = calloc(1, sizeof(struct Array));
 	struct Heap *heap_item;
 	unsigned int size = 0;
 
@@ -128,8 +128,8 @@ struct Array * createNewArray(unsigned int num_itens, unsigned int type){
 	new_array = calloc(num_itens, size);
 	checa(new_array);
 	arrays.id = array_count;
-	array_item.arrayref = new_array;
- 	array_item.length = num_itens;
+	array_item->arrayref = new_array;
+ 	array_item->length = num_itens;
  	arrays.array_element = &array_item;
  	arrays.size = size;
  	array_count++;
@@ -142,7 +142,7 @@ struct Array * createNewArray(unsigned int num_itens, unsigned int type){
  	used_heap_size = used_heap_size + sizeof(struct Heap);
  	heap_count++;
 
-	return &array_item;
+	return array_item;
 }
 
 void setFieldValue(struct Object * obj, char * name, unsigned int value){

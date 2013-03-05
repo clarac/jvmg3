@@ -785,6 +785,8 @@ struct class * getClass(char *pathname){
 		root[tamRootFix]='\0';
 		mainClass=thisc;
 	}
+	if(mainClass==NULL)
+		mainClass=thisc;
 	fclose(bc);
 
 	if(thisc->super_c>0){
