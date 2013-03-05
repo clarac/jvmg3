@@ -156,13 +156,6 @@ void aastore(){
 
 }
 
-/*TODO Colocar essa bendita instrucao na stack. Ela nao funciona de jeito nenhum la, nao faco ideia pq */
-struct Array popArray(){
-	struct Array a;
-	a.length = pop();
-	a.arrayref = (unsigned int *)pop();
-	return a;
-}
 
 void aconst_null (){
 	push(0,'C');
@@ -667,42 +660,42 @@ void fstore_3 (){
 }
 
 void arraylength(){
-	struct Array a;
+	struct Array *a;
 	a = popArray();
-	push(a.length,'A');
+	push(a->length,'I');
 }
 
 void caload(){
 	unsigned int i=pop();
-	struct Array a;
+	struct Array *a;
 	a = popArray();
-	if (a.arrayref == NULL){
+	if (a->arrayref == NULL){
 		printf("NullPointerException\n");
 		exit(EXIT_FAILURE);
 	}
-	if (i>=a.length){
+	if (i>=a->length){
 
 		printf("ArrayVarOutOfBoundsException\n");
 		exit(EXIT_FAILURE);
 	}
-	push(a.arrayref[i],'A');
+	push(a->arrayref[i],'A');
 
 }
 
 void castore(){
 	char c=pop();
 	unsigned int i=pop();
-	struct Array a;
+	struct Array *a;
 	a = popArray();
-	if (a.arrayref == NULL){
+	if (a->arrayref == NULL){
 		printf("NullPointerException\n");
 		exit(EXIT_FAILURE);
 	}
-	if (i>=a.length){
+	if (i>=a->length){
 		printf("ArrayVarOutOfBoundsException\n");
 		exit(EXIT_FAILURE);
 	}
-	a.arrayref[i] = c;
+	a->arrayref[i] = c;
 
 }
 
@@ -711,7 +704,7 @@ void newarray(){
 	if(type<0){
 		erroFatal("NegativeArraySizeException");
 	}
-	struct Array a;
+	struct Array *a;
 	unsigned int i = pop();
 	a = createNewArray(i,type);
 	pushArray(a);
@@ -721,7 +714,7 @@ void multianewarray(){
 	int type, n;
 	type = getShort();
 	n=getByte();
-	struct Array a;
+	struct Array *a;
 	int i=0;
 	int temp=1;
 	while (i<n){
@@ -734,87 +727,87 @@ void multianewarray(){
 
 void iaload(){
 	unsigned int i=pop();
-	struct Array a;
+	struct Array *a;
 	a = popArray();
-	if (a.arrayref == NULL){
+	if (a->arrayref == NULL){
 		printf("NullPointerException\n");
 		exit(EXIT_FAILURE);
 	}
-	if (i>=a.length){
+	if (i>=a->length){
 
 		printf("ArrayVarOutOfBoundsException\n");
 		exit(EXIT_FAILURE);
 	}
-	push(a.arrayref[i],'A');
+	push(a->arrayref[i],'A');
 
 }
 
 void iastore(){
 	unsigned int c=pop();
 	unsigned int i=pop();
-	struct Array a;
+	struct Array *a;
 	a = popArray();
-	if (a.arrayref == NULL){
+	if (a->arrayref == NULL){
 		printf("NullPointerException\n");
 		exit(EXIT_FAILURE);
 	}
-	if (i>=a.length){
+	if (i>=a->length){
 		printf("ArrayVarOutOfBoundsException\n");
 		exit(EXIT_FAILURE);
 	}
-	a.arrayref[i] = c;
+	a->arrayref[i] = c;
 
 }
 
 void faload(){
 	unsigned int i=pop();
-	struct Array a;
+	struct Array *a;
 	a = popArray();
-	if (a.arrayref == NULL){
+	if (a->arrayref == NULL){
 		printf("NullPointerException\n");
 		exit(EXIT_FAILURE);
 	}
-	if (i>=a.length){
+	if (i>=a->length){
 
 		printf("ArrayVarOutOfBoundsException\n");
 		exit(EXIT_FAILURE);
 	}
-	push(a.arrayref[i],'A');
+	push(a->arrayref[i],'A');
 
 }
 
 void fastore(){
 	unsigned int c=pop();
 	unsigned int i=pop();
-	struct Array a;
+	struct Array *a;
 	a = popArray();
-	if (a.arrayref == NULL){
+	if (a->arrayref == NULL){
 		printf("NullPointerException\n");
 		exit(EXIT_FAILURE);
 	}
-	if (i>=a.length){
+	if (i>=a->length){
 		printf("ArrayVarOutOfBoundsException\n");
 		exit(EXIT_FAILURE);
 	}
-	a.arrayref[i] = c;
+	a->arrayref[i] = c;
 
 }
 
 
 void daload(){
 	unsigned int i=pop();
-	struct Array a;
+	struct Array *a;
 	a = popArray();
-	if (a.arrayref == NULL){
+	if (a->arrayref == NULL){
 		printf("NullPointerException\n");
 		exit(EXIT_FAILURE);
 	}
-	if (i>=a.length){
+	if (i>=a->length){
 
 		printf("ArrayVarOutOfBoundsException\n");
 		exit(EXIT_FAILURE);
 	}
-	pushDbl(((double *)a.arrayref)[i]);
+	pushDbl(((double *)a->arrayref)[i]);
 
 }
 
@@ -822,17 +815,17 @@ void dastore(){
 	double d=popDbl();
 	printf("%lf\n", d);
 	unsigned int i=pop();
-	struct Array a;
+	struct Array *a;
 	a = popArray();
-	if (a.arrayref == NULL){
+	if (a->arrayref == NULL){
 		printf("NullPointerException\n");
 		exit(EXIT_FAILURE);
 	}
-	if (i>=a.length){
+	if (i>=a->length){
 		printf("ArrayVarOutOfBoundsException\n");
 		exit(EXIT_FAILURE);
 	}
-	((double *)a.arrayref)[i] = d;
+	((double *)a->arrayref)[i] = d;
 
 }
 
@@ -1542,86 +1535,86 @@ void ifnull (){
 
 void baload(){
 	unsigned int i=pop();
-	struct Array a;
+	struct Array *a;
 	a = popArray();
-	if (a.arrayref == NULL){
+	if (a->arrayref == NULL){
 		printf("NullPointerException\n");
 		exit(EXIT_FAILURE);
 	}
-	if (i>=a.length){
+	if (i>=a->length){
 
 		printf("ArrayVarOutOfBoundsException\n");
 		exit(EXIT_FAILURE);
 	}
-	push(a.arrayref[i],'A');
+	push(a->arrayref[i],'A');
 
 }
 
 void bastore(){
 	unsigned int c=pop();
 	unsigned int i=pop();
-	struct Array a;
+	struct Array *a;
 	a = popArray();
-	if (a.arrayref == NULL){
+	if (a->arrayref == NULL){
 		printf("NullPointerException\n");
 		exit(EXIT_FAILURE);
 	}
-	if (i>=a.length){
+	if (i>=a->length){
 		printf("ArrayVarOutOfBoundsException\n");
 		exit(EXIT_FAILURE);
 	}
-	a.arrayref[i] = c;
+	a->arrayref[i] = c;
 
 }
 
 void saload(){
 	unsigned int i=pop();
-	struct Array a;
+	struct Array *a;
 	a = popArray();
-	if (a.arrayref == NULL){
+	if (a->arrayref == NULL){
 		printf("NullPointerException\n");
 		exit(EXIT_FAILURE);
 	}
-	if (i>=a.length){
+	if (i>=a->length){
 
 		printf("ArrayVarOutOfBoundsException\n");
 		exit(EXIT_FAILURE);
 	}
-	push(((short *)a.arrayref)[i],'A');
+	push(((short *)a->arrayref)[i],'A');
 
 }
 
 void sastore(){
 	unsigned short c=pop();
 	unsigned int i=pop();
-	struct Array a;
+	struct Array *a;
 	a = popArray();
-	if (a.arrayref == NULL){
+	if (a->arrayref == NULL){
 		printf("NullPointerException\n");
 		exit(EXIT_FAILURE);
 	}
-	if (i>=a.length){
+	if (i>=a->length){
 		printf("ArrayVarOutOfBoundsException\n");
 		exit(EXIT_FAILURE);
 	}
-	((short *)a.arrayref)[i] = c;
+	((short *)a->arrayref)[i] = c;
 
 }
 
 void laload(){
 	unsigned int i=pop();
-	struct Array a;
+	struct Array *a;
 	a = popArray();
-	if (a.arrayref == NULL){
+	if (a->arrayref == NULL){
 		printf("NullPointerException\n");
 		exit(EXIT_FAILURE);
 	}
-	if (i>=a.length){
+	if (i>=a->length){
 
 		printf("ArrayVarOutOfBoundsException\n");
 		exit(EXIT_FAILURE);
 	}
-	pushLong(((long int *)a.arrayref)[i]);
+	pushLong(((long int *)a->arrayref)[i]);
 
 
 }
@@ -1629,17 +1622,17 @@ void laload(){
 void lastore(){
 	long int l=popLong();
 	unsigned int i =pop();
-	struct Array a;
+	struct Array *a;
 	a = popArray();
-	if (a.arrayref == NULL){
+	if (a->arrayref == NULL){
 		printf("NullPointerException\n");
 		exit(EXIT_FAILURE);
 	}
-	if (i>=a.length){
+	if (i>=a->length){
 		printf("ArrayVarOutOfBoundsException\n");
 		exit(EXIT_FAILURE);
 	}
-	((long int*) a.arrayref)[i] = l;
+	((long int*) a->arrayref)[i] = l;
 
 
 }
@@ -1974,7 +1967,10 @@ void wide(){
 	erroFatal("Instrucao nao implementada: wide");
 }
 
-
+void nope(int opcode){
+	printf("opcode 0x%X :",opcode);
+	erroFatal("Instrucao nao implementada");
+}
 
 
 
@@ -2203,59 +2199,59 @@ void chamaInst(int op, struct code * c){
 		case 199 : ifnonnull (); break;
 		case 200 : goto_w (); break;
 		case 201 : jsr_w (); break;
-		case 202 : nop (); break;
-		case 203 : nop (); break;
-		case 204 : nop (); break;
-		case 205 : nop (); break;
-		case 206 : nop (); break;
-		case 207 : nop (); break;
-		case 208 : nop (); break;
-		case 209 : nop (); break;
-		case 210 : nop (); break;
-		case 211 : nop (); break;
-		case 212 : nop (); break;
-		case 213 : nop (); break;
-		case 214 : nop (); break;
-		case 215 : nop (); break;
-		case 216 : nop (); break;
-		case 217 : nop (); break;
-		case 218 : nop (); break;
-		case 219 : nop (); break;
-		case 220 : nop (); break;
-		case 221 : nop (); break;
-		case 222 : nop (); break;
-		case 223 : nop (); break;
-		case 224 : nop (); break;
-		case 225 : nop (); break;
-		case 226 : nop (); break;
-		case 227 : nop (); break;
-		case 228 : nop (); break;
-		case 229 : nop (); break;
-		case 230 : nop (); break;
-		case 231 : nop (); break;
-		case 232 : nop (); break;
-		case 233 : nop (); break;
-		case 234 : nop (); break;
-		case 235 : nop (); break;
-		case 236 : nop (); break;
-		case 237 : nop (); break;
-		case 238 : nop (); break;
-		case 239 : nop (); break;
-		case 240 : nop (); break;
-		case 241 : nop (); break;
-		case 242 : nop (); break;
-		case 243 : nop (); break;
-		case 244 : nop (); break;
-		case 245 : nop (); break;
-		case 246 : nop (); break;
-		case 247 : nop (); break;
-		case 248 : nop (); break;
-		case 249 : nop (); break;
-		case 250 : nop (); break;
-		case 251 : nop (); break;
-		case 252 : nop (); break;
-		case 253 : nop (); break;
-		case 254 : nop (); break;
-		case 255 : nop (); break;
+		case 202 : nope(op); break;
+		case 203 : nope(op); break;
+		case 204 : nope(op); break;
+		case 205 : nope(op); break;
+		case 206 : nope(op); break;
+		case 207 : nope(op); break;
+		case 208 : nope(op); break;
+		case 209 : nope(op); break;
+		case 210 : nope(op); break;
+		case 211 : nope(op); break;
+		case 212 : nope(op); break;
+		case 213 : nope(op); break;
+		case 214 : nope(op); break;
+		case 215 : nope(op); break;
+		case 216 : nope(op); break;
+		case 217 : nope(op); break;
+		case 218 : nope(op); break;
+		case 219 : nope(op); break;
+		case 220 : nope(op); break;
+		case 221 : nope(op); break;
+		case 222 : nope(op); break;
+		case 223 : nope(op); break;
+		case 224 : nope(op); break;
+		case 225 : nope(op); break;
+		case 226 : nope(op); break;
+		case 227 : nope(op); break;
+		case 228 : nope(op); break;
+		case 229 : nope(op); break;
+		case 230 : nope(op); break;
+		case 231 : nope(op); break;
+		case 232 : nope(op); break;
+		case 233 : nope(op); break;
+		case 234 : nope(op); break;
+		case 235 : nope(op); break;
+		case 236 : nope(op); break;
+		case 237 : nope(op); break;
+		case 238 : nope(op); break;
+		case 239 : nope(op); break;
+		case 240 : nope(op); break;
+		case 241 : nope(op); break;
+		case 242 : nope(op); break;
+		case 243 : nope(op); break;
+		case 244 : nope(op); break;
+		case 245 : nope(op); break;
+		case 246 : nope(op); break;
+		case 247 : nope(op); break;
+		case 248 : nope(op); break;
+		case 249 : nope(op); break;
+		case 250 : nope(op); break;
+		case 251 : nope(op); break;
+		case 252 : nope(op); break;
+		case 253 : nope(op); break;
+		case 254 : nope(op); break;
+		case 255 : nope(op); break;
 	}
 }

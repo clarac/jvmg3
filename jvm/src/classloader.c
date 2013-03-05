@@ -776,7 +776,15 @@ struct class * getClass(char *pathname){
 
 	printf("carregou %s com sucesso\n",thisc->name);
 	//printClass(thisc);
-
+	if(mainClass==NULL && strcmp(thisc->name,pathname)!=0){
+		int tamName, tamRoot, tamPath, tamRootFix;
+		tamName=strlen(thisc->name);
+		tamRoot=strlen(root);
+		tamPath=strlen(pathname)-6;
+		tamRootFix=tamRoot-(tamName-tamPath)-1;
+		root[tamRootFix]='\0';
+		mainClass=thisc;
+	}
 	fclose(bc);
 
 	if(thisc->super_c>0){

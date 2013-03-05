@@ -52,7 +52,7 @@ struct Heap{
 
 struct Heap **heap;
 
-struct Array createNewArray(unsigned int num_itens, unsigned int type);
+struct Array * createNewArray(unsigned int num_itens, unsigned int type);
 struct Object* newObject(struct class *instance);
 void verifyHeapSpace();
 void createHeap();

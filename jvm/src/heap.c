@@ -97,7 +97,7 @@ struct Object* newObject(struct class *instance){
 
 
 
-struct Array createNewArray(unsigned int num_itens, unsigned int type){
+struct Array * createNewArray(unsigned int num_itens, unsigned int type){
 	void *new_array;
 	struct Array_type arrays;
 	struct Array array_item;
@@ -142,7 +142,7 @@ struct Array createNewArray(unsigned int num_itens, unsigned int type){
  	used_heap_size = used_heap_size + sizeof(struct Heap);
  	heap_count++;
 
-	return array_item;
+	return &array_item;
 }
 
 void setFieldValue(struct Object * obj, char * name, unsigned int value){

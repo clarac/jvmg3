@@ -133,10 +133,17 @@ void dropFrame(){
 	//printf("base=0x%X\n",(unsigned int)base);
 }
 
-void pushArray(struct Array a){
-	push ((unsigned int) &a,0);
+void pushArray(struct Array * a){
+	push ((unsigned int) a,0);
 }
 
+
+struct Array * popArray(){
+	struct Array * a = (struct Array *)pop();
+	//a.length = pop();
+	//a.arrayref = (unsigned int *)pop();
+	return a;
+}
 
 unsigned int getLocalVar(int index){
 	if(base==NULL){

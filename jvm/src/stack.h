@@ -12,7 +12,7 @@
 
 
 #include <stdint.h>
-
+#include <heap.h>
 
 unsigned int pop();
 void  push(unsigned int valor, char c);
@@ -24,8 +24,8 @@ unsigned int getLocalVar(int index);
 void setLocalVar(int index, int value);
 long long popLong();
 void pushLong(long long l);
-struct Array popArray();
-void pushArray(struct Array a);
+void pushArray(struct Array * a);
+struct Array * popArray ();
 void mainTeste();
 char getTipo();
 void setTipo(char t);
