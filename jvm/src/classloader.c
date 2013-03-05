@@ -446,6 +446,20 @@ struct method * getMethod(struct class * c, char * name, char * descriptor){
 	return NULL;
 }
 
+struct method * tryMethod(struct class * c, char * name, char * descriptor){
+	checa(c);
+	int i;
+	for(i=0;i<c->m_count;i++){
+		if(strcmp(name,c->methods[i]->name)==0 && strcmp(descriptor,c->methods[i]->descriptor)==0){
+			return c->methods[i];
+		}
+	}
+	if(c->super!=NULL)
+		return getMethod(c->super,name, descriptor);
+	//printf("%s\n%s\n",name, descriptor);
+	return NULL;
+}
+
 struct method * getMethodByCPIndex(struct class * c, unsigned int index){
 	checa(c);
 	if(index>0 && index < c->cpc){
@@ -781,7 +795,7 @@ struct class * getClass(char *pathname){
 		tamName=strlen(thisc->name);
 		tamRoot=strlen(root);
 		tamPath=strlen(pathname)-6;
-		tamRootFix=tamRoot-(tamName-tamPath)-1;
+		tamRootFix=tamRoot-(tamName-tamPath);
 		root[tamRootFix]='\0';
 		mainClass=thisc;
 	}

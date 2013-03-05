@@ -1669,13 +1669,16 @@ void invokespecial(){
 	struct method * m;
 	char * className;
 
-	struct Object * obj =(struct Object *) pop();
+	//struct Object * obj =(struct Object *) pop();
 
 	m = getMethodByCPIndex(mainClass,index);
-	if(m->code->code_l<2)
+	if(m->code->code_l<2){
+		pop();
 		return;
-	className=getMethodClassName(mainClass,index);
+	}
 
+	className=getMethodClassName(mainClass,index);
+	newFrame(m,1);
 	push((unsigned int)curObj,0);
 	push(pc,0);
 	push((unsigned int)current,0);
@@ -1683,14 +1686,13 @@ void invokespecial(){
 	//printf("pc=%d\n",pc);
 	//printf("curennt=0x%X\n",(unsigned int)current);
 	current = getClass(className);
-	curObj = obj;
+	//curObj = obj;
 	executaMetodo(m);
 
 	pcInc=2;
 }
 
 void invokestatic(){
-	//TODO args??
 	unsigned int index = getShort();
 	struct method * m;
 	char * className;
@@ -1698,9 +1700,12 @@ void invokestatic(){
 	if(m->code->code_l<2)
 		return;
 	className=getMethodClassName(current,index);
-	//push((unsigned int)curObj,0);
-	//push((unsigned int)pc,0);
-	//push((unsigned int)current,0);
+	newFrame(m,0);
+	push((unsigned int)curObj,0);
+	push((unsigned int)pc,0);
+	push((unsigned int)current,0);
+
+
 	current = getClass(className);
 	executaMetodo(m);
 	pcInc=2;
@@ -1708,15 +1713,12 @@ void invokestatic(){
 
 void return_(){
 
-	dropFrame();
 	current=(struct class *)pop();
-	//printf("curennt=0x%X\n",(unsigned int)current);
 	pc=pop();
-	//printf("pc=%d\n",pc);
-	if(estatico==0)
-		curObj = (struct Object *)pop();
-	//printf("curobj=0x%X\n",(unsigned int)curObj);
+	curObj = (struct Object *)pop();
+	dropFrame();
 	pcInc=1;
+	encerrou=1;
 }
 
 void ireturn(){
@@ -1771,8 +1773,10 @@ void putfield(){
 	unsigned int value = pop();
 	unsigned int vh;
 	struct Object * obj;
-	//char * descriptor = curObj->instance->cpool[index-1]->name_and_type->descriptor;
-	char * descriptor = current->cpool[index-1]->name_and_type->descriptor;
+	char * descriptor;
+	obj = getLocalVar(0);
+	descriptor = obj->instance->cpool[index-1]->name_and_type->descriptor;
+
 	if(strcmp(descriptor,"D")==0 || strcmp(descriptor,"J")==0 ){ // double ou long
 		vh = pop();
 		obj = (struct Object *) pop();
@@ -1786,7 +1790,7 @@ void putfield(){
 }
 
 void invokevirtual(){
-	//TODO args??
+
 	unsigned int index = getShort();
 	unsigned int a;
 	struct method * m;
@@ -1806,7 +1810,7 @@ void invokevirtual(){
 		switch (tipo){
 			case 'C':
 				str = pop();
-				printf("%c",str);
+				printf("%c",str[0]);
 				break;
 			case 'S':
 				str = (char *) pop();
@@ -1835,12 +1839,16 @@ void invokevirtual(){
 				break;
 		}
 		if(strcmp(mName,"println")==0)
-			printf("\n");
+			printf(" \n");
 	} else{
 		m = getMethod(getClass(className),mName,desc);
-		if(m->code->code_l<2)
+		if(m->code->code_l<2){
+			pop();
 			return;
-		//push((unsigned int)curObj,0);
+		}
+
+		newFrame(m,1);
+		push((unsigned int)curObj,0);
 		push(pc,0);
 		push((unsigned int)current,0);
 		current = getClass(className);
@@ -1963,6 +1971,7 @@ void invokeinterface(){
 		m = getMethod(getClass(className),mName,desc);
 		if(m->code->code_l<2)
 			return;
+		newFrame(m);
 		//push((unsigned int)curObj,0);
 		push(pc,0);
 		push((unsigned int)current,0);

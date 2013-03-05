@@ -14,7 +14,7 @@
 
 struct class * current, *mainClass;
 struct Object * curObj;
-int pc, pcInc, estatico;
+int pc, pcInc, estatico, encerrou;
 char * erroMsg;
 
 void executaMetodo();

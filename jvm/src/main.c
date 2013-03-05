@@ -4,6 +4,7 @@
 #include <instrucoes.h>
 #include <util.h>
 #include <main.h>
+#include <string.h>
 
 void erroFatal(char * mensagem){
 	printf("%s\n",mensagem);
@@ -16,27 +17,21 @@ void erroFatal(char * mensagem){
 void executaMetodo(struct method * m){
 	struct code *cod = m->code;
 	pc = 0;
-	int op;
+	int op, i, v;
 
-	newFrame(cod->max_locals);
+//	newFrame(m);
 
-	if((m->aflags & 0x8) ==0){
-		estatico=0;
-		setLocalVar(0,(unsigned int) curObj);
-	}else{
-		estatico=1;
-	}
+	encerrou = 0;
 
-	while(pc<cod->code_l){
-		//if(pc>2)
-			//return;
+	while(pc<cod->code_l && encerrou == 0){
+		encerrou = 0;
 		pcInc = 1;
 		op=getLastByte(cod->code[pc]);
 		//printf("chamando instrucao 0x%X (%d)\n",op,op);
 		chamaInst(op,cod);
 		pc+=pcInc;
-
 	}
+	encerrou=0;
 
 }
 
@@ -44,37 +39,47 @@ void iniciaClasse(struct class * c){
 	checa(c);
 	if(mainClass==NULL)
 		return;
+	struct method * m ;
+	struct Object * o ;
+	struct Object * oaux;
+	struct class * aux;
+	/*
 	struct method * m = getMethod(c,"<init>","()V");
 	struct Object * o = newObject(c);
 	struct Object * oaux;
 	struct class * aux;
 	oaux=curObj;
+	if(strcmp(c->name,"java/lang/String")==0){
+		return;
+	}
 
-	push(pcInc,0);
-	push(pc,0);
+
+	current = c;
+	curObj=o;
+	newFrame(m);
 	push((unsigned int)curObj,0);
 	push(m->code->code_l,0);
 	push((unsigned int)current,0);
-	current = c;
-	curObj=o;
 	executaMetodo(m);
-	if(strcmp(c->name,"java/lang/String")==0){
-		pc=pop();
-		pcInc=pop();
-		return;
-	}
+	*/
+	m = tryMethod(c,"<clinit>","()V");
 	if(c->has_static==1){
+		push(pcInc,0);
+		push(pc,0);
 		aux = mainClass;
 		mainClass=c;
-		m = getMethod(c,"<clinit>","()V");
+
+
 		push(m->code->code_l,0);
 		push((unsigned int)current,0);
 		current=c;
+		newFrame(m,0);
 		executaMetodo(m);
 		mainClass=aux;
+		pc=pop();
+		pcInc=pop();
 	}
-	pc=pop();
-	pcInc=pop();
+
 }
 
 int main(int argc, char *argv[]){
@@ -91,6 +96,7 @@ int main(int argc, char *argv[]){
 	iniciaClasse(current);
 
 	m = getMethod(current,"main","([Ljava/lang/String;)V");
+	newFrame(m,0);
 	push((unsigned int)curObj,0);
 	push(m->code->code_l,0);
 	push((unsigned int)current,0);

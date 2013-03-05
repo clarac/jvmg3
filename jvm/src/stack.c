@@ -91,10 +91,48 @@ void setTipo(char t){
  *
  */
 
-void newFrame(unsigned int lv_size){
-	unsigned int * local = calloc(lv_size+1, sizeof(unsigned int));
+void newFrame(struct method * m, int objref){
+	unsigned int * local = calloc(m->code->max_locals+1, sizeof(unsigned int));
 	checa(local);
-	local[0]=lv_size;
+	local[0]=m->code->max_locals;
+
+	int i,v;
+	unsigned int a,b;
+	i=1;
+	v=local[0];
+	if(objref==1){
+		estatico=0;
+		//v=2;
+	}else{
+		estatico=1;
+	}
+	i = strlen(m->descriptor) -2;
+	while(m->descriptor[i]!=')'){
+		i--;
+	}
+	i--;
+	for(;i>0 && v>0 && m->descriptor[i]!=';' && m->descriptor[i]!='[' && m->descriptor[i]!='L';i--,v--){
+		switch(m->descriptor[i]){
+			case 'D':
+			case 'J':
+				b=pop();
+				a=pop();
+				local[v-1]=a;
+				local[v]=b;
+				//setLocalVar(v,a);
+				//setLocalVar(v+1,b);
+				v--;
+				break;
+			default:
+				a=pop();
+				local[v]=a;
+				//setLocalVar(v,a);
+				break;
+		}
+	}
+	if(objref==1)
+		local[1] = pop();
+
 	push((unsigned int) base,0);
 	push((unsigned int) local,0);
 	//printf("local=0x%X\n",(unsigned int)local);
@@ -111,7 +149,7 @@ void dropFrame(){
 	unsigned int *local;
 	struct snode * p;
 	if(topo==NULL)
-		erroFatal("Stack is empty");
+		return;//erroFatal("Stack is empty");
 	while(topo!=NULL&&topo!=base){
 		pop();
 	}
@@ -169,33 +207,5 @@ void setLocalVar(int index, int value){
 	local[index+1]=value;
 }
 
-void mainTeste(){
-	unsigned int i;
-
-	newFrame(2);
-	push(0,0);
-
-	for(i=1;i<21;i++){
-		push(i,0);
-	}
-
-	newFrame(82);
-	//setLocalVar(12,871);
-	//printf("%u\n",getLocalVar(12));
-	for(;i<50;i++){
-		push(i,0);
-	}
-
-	dropFrame();
-
-
-	printf("base: %X\n",(unsigned int)base);
-	while(topo!=NULL && topo!=base){
-		printf("%u\n",topo->valor);
-		printf("topo: %X\n",(unsigned int)topo);
-		pop();
-	}
-
-}
 
 

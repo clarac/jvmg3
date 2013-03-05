@@ -28,6 +28,7 @@ struct class * getFirst(char *pathname);
 struct field * getField(struct class * c, char * name);
 void checa(void * ptr);
 struct method * getMethod(struct class * c, char * name, char * descriptor);
+struct method * tryMethod(struct class * c, char * name, char * descriptor);
 struct method * getMethodByCPIndex(struct class * c, unsigned int index);
 char * getMethodNameByCPIndex(struct class * c, unsigned int index);
 char * getMethodClassName(struct class * c, unsigned int index);
