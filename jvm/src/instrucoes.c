@@ -903,12 +903,14 @@ void i2b(){
 }
 
 void i2c(){
-	i2b();
+	char c = pop();
+	push((unsigned int)c,'C');
+
 }
 
 void i2s(){
 	short s = pop();
-	push((unsigned int)s,'s');
+	push((unsigned int)s,'I');
 }
 
 void iadd(){
@@ -1802,6 +1804,10 @@ void invokevirtual(){
 	else if(strcmp(className,"java/io/PrintStream")==0 || strcmp(className,"java\\io\\PrintStream")==0){
 		tipo = getTipo();
 		switch (tipo){
+			case 'C':
+				str = pop();
+				printf("%c",str);
+				break;
 			case 'S':
 				str = (char *) pop();
 				printf("%s",str);
