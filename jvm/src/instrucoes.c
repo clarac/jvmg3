@@ -11,67 +11,73 @@
 struct code * cptr;
 
 unsigned int getByte(){
-	unsigned int a = (unsigned int) cptr->code[pc+1];
-	pcInc=2;
+	int p = pc + pcInc -1;
+	unsigned int a = (unsigned int) cptr->code[p+1];
+	pcInc++;
 	return a;
 }
 
 unsigned int getShort(){
-	unsigned int a = (unsigned int) cptr->code[pc+1];
-	unsigned int b = (unsigned int) cptr->code[pc+2];
+	int p = pc + pcInc -1;
+	unsigned int a = (unsigned int) cptr->code[p+1];
+	unsigned int b = (unsigned int) cptr->code[p+2];
 	a<<=8;
 	a|=b;
-	pcInc=3;
+	pcInc+=2;
 	return a;
 }
 
 unsigned int getWord(){
-	unsigned int a = (unsigned int) cptr->code[pc+1];
-	unsigned int b = (unsigned int) cptr->code[pc+2];
-	unsigned int c = (unsigned int) cptr->code[pc+3];
-	unsigned int d = (unsigned int) cptr->code[pc+4];
+	int p = pc + pcInc -1;
+	unsigned int a = (unsigned int) cptr->code[p+1];
+	unsigned int b = (unsigned int) cptr->code[p+2];
+	unsigned int c = (unsigned int) cptr->code[p+3];
+	unsigned int d = (unsigned int) cptr->code[p+4];
 	a<<=8;
 	a|=b;
 	a<<=8;
 	a|=c;
 	a<<=8;
 	a|=d;
-	pcInc=5;
+	pcInc+=4;
 	return a;
 }
 
 int getSignedByte(){
-	int a = (int) cptr->code[pc+1];
-	pcInc=2;
+	int p = pc + pcInc -1;
+	int a = (int) cptr->code[p+1];
+	pcInc++;
 	return a;
 }
 
 int getSignedShort(){
+	int p = pc + pcInc -1;
 	int a = (int) cptr->code[pc+1];
-	unsigned int b = (unsigned int) cptr->code[pc+2] & 0xFF;
+	unsigned int b = (unsigned int) cptr->code[p+2] & 0xFF;
 	a<<=8;
 	a|=b;
 	if((a&0x8000)!=0){
 		a|=0xFFFF0000;
 	}
 
-	pcInc=3;
+	pcInc+=2;
 
 	return a;
 }
 
 int getSignedWord(){
-	int a = (int) cptr->code[pc+1];
-	unsigned int b = (unsigned int) cptr->code[pc+2] & 0xFF;
-	unsigned int c = (unsigned int) cptr->code[pc+3] & 0xFF;
-	unsigned int d = (unsigned int) cptr->code[pc+4] & 0xFF;
+	int p = pc + pcInc -1;
+	int a = (int) cptr->code[p+1];
+	unsigned int b = (unsigned int) cptr->code[p+2] & 0xFF;
+	unsigned int c = (unsigned int) cptr->code[p+3] & 0xFF;
+	unsigned int d = (unsigned int) cptr->code[p+4] & 0xFF;
 	a<<=8;
 	a|=b;
 	a<<=8;
 	a|=c;
 	a<<=8;
 	a|=d;
-	pcInc=5;
+	pcInc+=4;
 	return a;
 }
 
@@ -996,7 +1002,7 @@ void iinc(){
 	int v = getLocalVar(index);
 	v+=cte;
 	setLocalVar(index,v);
-	pcInc=3;
+	//pcInc=3;
 }
 
 void iload(){
@@ -1836,22 +1842,114 @@ void ret(){
 	pc = retAdress;
 }
 
-/*******************************************************************************************
- *
- *
- * A IMPLEMENTAR
- *
- *
- ***********************************************************************************************/
+void lookupswitch(){
+	int pad = (pc+1)%4;
+	if(pad>0)
+		pad = 4 - pad;
+	pcInc+=pad;
+	int def = getSignedWord();
+	int n = getSignedWord();
+	int i, match, offset;
+	int key = pop();
+	for(i=0;i<n;i++){
+		match = getSignedWord();
+		offset = getSignedWord();
+		if(key==match){
+			pcInc = offset;
+			return;
+		}
+	}
+	pcInc = def;
+}
+
+void tableswitch(){
+	int pad = (pc+1)%4;
+	if(pad>0)
+		pad = 4 - pad;
+	pcInc+=pad;
+	int def = getSignedWord();
+	int low = getSignedWord();
+	int high = getSignedWord();
+	int i, offset, tboff;
+	int index = pop();
+
+	if(index < low || index > high){
+		pcInc = def;
+	} else{
+		tboff = index - low;
+		pcInc += tboff*4;
+		offset = getSignedWord();
+		pcInc = offset;
+	}
 
 
 
 
+}
 
 
-void tableswitch(){}
-void lookupswitch(){}
-void invokeinterface(){}
+void invokeinterface(){
+	//TODO args??
+	unsigned int index = getShort();
+	unsigned int b = getShort();
+	unsigned int a;
+	struct method * m;
+	char * className, *mName, tipo, *desc;
+	char * str;
+	struct item * i = mainClass->cpool[index-1];
+	//className=getMethodClassName(current,index);
+	//mName=getMethodNameByCPIndex(current,index);
+	className = i->class;
+	mName = i->name_and_type->name;
+	desc = i->name_and_type->descriptor;
+	if(strcmp(className,"java/lang/StringBuilder")==0 || strcmp(className,"java\\lang\\StringBuilder")==0){
+
+	}
+	else if(strcmp(className,"java/io/PrintStream")==0 || strcmp(className,"java\\io\\PrintStream")==0){
+		tipo = getTipo();
+		switch (tipo){
+			case 'S':
+				str = (char *) pop();
+				printf("%s",str);
+				break;
+			case 'I':
+				a = pop();
+				printf("%d",a);
+				break;
+			case 'F':
+				a = pop();
+				printf("%f",toFloat(a));
+				break;
+			case 'D':
+				printf("%f",popDbl());
+				break;
+			case 'J':
+				printf("%lld",popLong());
+				break;
+			case 'B':
+				a = pop();
+				if(a==0)
+					printf("false");
+				else
+					printf("true");
+				break;
+		}
+		if(strcmp(mName,"println")==0)
+			printf("\n");
+	} else{
+		m = getMethod(getClass(className),mName,desc);
+		if(m->code->code_l<2)
+			return;
+		//push((unsigned int)curObj,0);
+		push(pc,0);
+		push((unsigned int)current,0);
+		current = getClass(className);
+		executaMetodo(m); //TODO arrumar!!
+		pcInc=2;
+	}
+
+
+}
 
 
 void invokedynamic(){
