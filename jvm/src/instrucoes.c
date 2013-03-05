@@ -1439,6 +1439,8 @@ void if_acmpeq (){
 	a=pop();
 	if(a==b)
 		goto_();
+	else
+		getShort();
 }
 
 void if_acmpne (){
@@ -1447,6 +1449,8 @@ void if_acmpne (){
 	a=pop();
 	if(a!=b)
 		goto_();
+	else
+		getShort();
 }
 
 void if_icmpeq (){
@@ -1463,6 +1467,8 @@ void if_icmplt (){
 	a=pop();
 	if(a<b)
 		goto_();
+	else
+		getShort();
 }
 
 void if_icmple (){
@@ -1471,6 +1477,8 @@ void if_icmple (){
 	a=pop();
 	if(a<=b)
 		goto_();
+	else
+		getShort();
 }
 
 void if_icmpgt (){
@@ -1479,6 +1487,8 @@ void if_icmpgt (){
 	a=pop();
 	if(a>b)
 		goto_();
+	else
+		getShort();
 }
 
 void if_icmpge (){
@@ -1487,42 +1497,56 @@ void if_icmpge (){
 	a=pop();
 	if(a>=b)
 		goto_();
+	else
+		getShort();
 }
 
 void ifeq (){
 	int a = pop();
 	if(a==0)
 		goto_();
+	else
+		getShort();
 }
 
 void ifne (){
 	int a = pop();
 	if(a!=0)
 		goto_();
+	else
+		getShort();
 }
 
 void iflt (){
 	int a = pop();
 	if(a<0)
 		goto_();
+	else
+		getShort();
 }
 
 void ifgt (){
 	int a = pop();
 	if(a>0)
 		goto_();
+	else
+		getShort();
 }
 
 void ifle (){
 	int a = pop();
 	if(a<=0)
 		goto_();
+	else
+		getShort();
 }
 
 void ifge (){
 	int a = pop();
 	if(a>=0)
 		goto_();
+	else
+		getShort();
 }
 
 void ifnonnull (){
