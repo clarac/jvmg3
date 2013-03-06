@@ -7,7 +7,6 @@
 #include "main.h"
 
 static char *root;
-char *name;
 
 
 void checa(void * ptr){
@@ -530,7 +529,7 @@ unsigned int getMethodCPIndex(struct class * c, char * name, char * classe, char
 struct class * getClassByName(char * pathname){
 	int i;
 	struct class * thisc;
-	char *nameaux = calloc(strlen(pathname),sizeof(char));
+	char *nameaux = calloc(strlen(pathname)+1,sizeof(char));
 	checa(nameaux);
 	strcpy(nameaux,pathname);
 	for(i=0;nameaux[i]!='\0';i++){
@@ -568,31 +567,44 @@ struct class * getClass(char *pathname){
 
 	FILE *bc;						// arquivo .class
 	struct item *atual;
-	unsigned int cpc, aux1, aux2,i,j, tag, *it;
-	char lido, stc[4],*cpt, *caminho;
+	unsigned int cpc, aux1, aux2,i,j, tag, *it, lastSlash;
+	char lido, stc[4],*cpt, *caminho, *name;
 	struct item **pdc;
 	struct class *thisc;
 	struct field *fd, **fds;
 	struct method *mtd, **mtds;
 	int ponto=0;
-	if(pathname!=name){
-		strcpy(name,pathname);
-	}
+	name=calloc(strlen(pathname)+1, sizeof(char));
+	strcpy(name,pathname);
+
 	thisc=getClassByName(name);
 	if(thisc!=NULL)
 		return thisc;
-
+	lastSlash = 0;
 
 	for(i=0;name[i]!='\0';i++){
 		if(name[i]=='.')
 			ponto=1;
-		if(name[i]=='/')
+		if(name[i]=='/'){
 			name[i]='\\';
+			lastSlash=i;
+		}
 	}
-	if(ponto==0)
+	if(lastSlash>0){
+		cpt = calloc(strlen(name)+1, sizeof(char));
+		strcpy(cpt,name);
+		strcpy(name,&(cpt[lastSlash]));
+	}
+	if(ponto==0){
 		strcat(name,".class");
-	caminho=calloc(strlen(root)+strlen(name), sizeof(char));
+	}
+
+
+
+	caminho=calloc(strlen(root)+strlen(name)+1, sizeof(char));
+
 	checa(caminho);
+
 	strcpy(caminho,root);
 
 	strcat(caminho,name);
@@ -600,7 +612,8 @@ struct class * getClass(char *pathname){
 	bc=fopen(caminho,"rb");
 
 	if(bc==0){
-		erroMsg=caminho;
+		erroMsg=calloc(strlen(caminho)+1,sizeof(char));
+		strcpy(erroMsg,caminho);
 		erroFatal("NoClassDefFoundError");
 	}
 	c_count++;
@@ -790,20 +803,22 @@ struct class * getClass(char *pathname){
 
 	printf("carregou %s com sucesso\n",thisc->name);
 	//printClass(thisc);
-	if(mainClass==NULL && strcmp(thisc->name,pathname)!=0){
+	/*if(mainClass==NULL && strcmp(name,pathname)!=0){
 		int tamName, tamRoot, tamPath, tamRootFix;
 		tamName=strlen(thisc->name);
 		tamRoot=strlen(root);
 		tamPath=strlen(pathname)-6;
-		tamRootFix=tamRoot-(tamName-tamPath);
+		tamRootFix=tamRoot-(tamName-tamPath)-1;
 		root[tamRootFix]='\0';
 		mainClass=thisc;
-	}
+	}*/
 	if(mainClass==NULL)
 		mainClass=thisc;
 	fclose(bc);
-
-	if(thisc->super_c>0){
+	if(strcmp(thisc->supername,"java/lang/Object")==0){
+		thisc->super_c=NULL;
+	}
+	if(thisc->super_c!=NULL){
 		i=strlen(root)+ strlen(thisc->supername)+6;
 		if(i>500)
 			name=(char *)realloc(name,i+100);
@@ -828,32 +843,22 @@ int getRoot(char *path){
 }
 
 struct class * getFirst(char * caminho){
-	int indice;
+	int indice, tam;
+	char * name;
 	indice=getRoot(caminho);
 	indice++;
-	name=caminho;
-	root=calloc(indice+1,sizeof(char));
-	checa(root);
-	if(indice>1){
-		root=strncpy(root,name,indice);
-		root[indice]='\0';
-	}
-	//TODO checar root de acordo com 1a classe, ajustar se necess�rio!
-	//TODO NoClassDefFoundError, ClassCircularityError,IncompatibleClassChangeError
+	tam = strlen(caminho)+1;
 
-	else{
-		indice--;
-		root[0]='\0';
-	}
-	name=calloc(500+indice,sizeof(char));
+	root=calloc(tam,sizeof(char));
+	checa(root);
+
+	strcpy(root,caminho);
+
+	name=calloc(tam,sizeof(char));
 	checa(name);
-	strcpy(name,caminho);
-	name+=indice;
+	strcpy(name,&(root[indice]));
+
+	root[indice]='\0';
 
 	return getClass(name);
-
-
 }
-
-//TODO Preparation involves creating the static fields for the class or interface and initializing
-//those fields to their standard default values 0/null/false

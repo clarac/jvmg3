@@ -27,7 +27,7 @@ unsigned int pop(){
 		erroFatal("Stack frame is empty");
 	struct snode * prox = topo->prox;
 	unsigned int valor = topo->valor;
-	//free(topo);
+	free(topo);
 	topo=prox;
 	return valor;
 }
@@ -156,15 +156,15 @@ void dropFrame(){
 	checa(topo);
 	p = topo->prox;
 	unsigned int valor = topo->valor;
-	//free(topo);
+	free(topo);
 
 	topo=p;
 	checa(topo);
 	local=(unsigned int *)valor;
-	//free(local);
+	free(local);
 	p = topo->prox;
 	valor = topo->valor;
-	//free(topo);
+	free(topo);
 	topo=p;
 	base=(struct snode *)valor;
 	//printf("local=0x%X\n",(unsigned int)local);

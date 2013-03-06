@@ -63,21 +63,23 @@ void iniciaClasse(struct class * c){
 	executaMetodo(m);
 	*/
 	m = tryMethod(c,"<clinit>","()V");
-	if(c->has_static==1){
-		push(pcInc,0);
-		push(pc,0);
+	if(m!=NULL){
 		aux = mainClass;
 		mainClass=c;
+		push(pc,0);
+		push(pcInc,0);
 
-
-		push(m->code->code_l,0);
+		newFrame(m,0);
+		push((unsigned int)curObj,0);
+		push(pc,0);
 		push((unsigned int)current,0);
 		current=c;
-		newFrame(m,0);
+
 		executaMetodo(m);
 		mainClass=aux;
-		pc=pop();
+
 		pcInc=pop();
+		pc=pop();
 	}
 
 }
@@ -103,5 +105,3 @@ int main(int argc, char *argv[]){
 	executaMetodo(m);
 	return 0;
 }
-
-

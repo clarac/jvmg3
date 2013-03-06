@@ -1357,7 +1357,8 @@ is pushed onto the operand stack.
 	struct item *a;
 	struct class *c;
 	a=current->cpool[index-1];
-	//TODO checar com tamanho (ldc_w, ldc2_w)
+
+
 	switch(a->tag){
 		case 3: //int
 			push(a->bytes,'I');
@@ -1677,6 +1678,10 @@ void invokespecial(){
 	}
 
 	className=getMethodClassName(mainClass,index);
+	if(strcmp(className,"java/lang/Objetc")==0){
+		pop();
+		return;
+	}
 	newFrame(m,1);
 	push((unsigned int)curObj,0);
 	push(pc,0);
@@ -1696,9 +1701,15 @@ void invokestatic(){
 	struct method * m;
 	char * className;
 	m = getMethodByCPIndex(current,index);
+	className=getMethodClassName(current,index);
+	if(strcmp(className,"java/lang/Object")==0){
+		return;
+	}
+
 	if(m->code->code_l<2)
 		return;
-	className=getMethodClassName(current,index);
+
+
 	newFrame(m,0);
 	push((unsigned int)curObj,0);
 	push((unsigned int)pc,0);
