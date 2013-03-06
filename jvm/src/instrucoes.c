@@ -1808,6 +1808,10 @@ void invokevirtual(){
 				str = pop();
 				printf("%c",str);
 				break;
+			case 'L':
+				str = (char *) pop();
+				printf("%s",str);
+				break;
 			case 'S':
 				str = (char *) pop();
 				printf("%s",str);
