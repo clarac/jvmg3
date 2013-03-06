@@ -1,10 +1,10 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <stack.h>
-#include <util.h>
-#include <heap.h>
-#include <main.h>
-#include <classloader.h>
+#include "stack.h"
+#include "util.h"
+#include "heap.h"
+#include "main.h"
+#include "classloader.h"
 
 struct snode{
 	unsigned int valor;

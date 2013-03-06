@@ -1,9 +1,9 @@
 #include <stdio.h>
-#include <classloader.h>
-#include <stack.h>
-#include <instrucoes.h>
-#include <util.h>
-#include <main.h>
+#include "classloader.h"
+#include "stack.h"
+#include "instrucoes.h"
+#include "util.h"
+#include "main.h"
 #include <string.h>
 
 void erroFatal(char * mensagem){

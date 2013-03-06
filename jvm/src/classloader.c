@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <util.h>
-#include <tipos.h>
-#include <classloader.h>
-#include <main.h>
+#include "util.h"
+#include "tipos.h"
+#include "classloader.h"
+#include "main.h"
 
 static char *root;
 char *name;
@@ -838,7 +838,7 @@ struct class * getFirst(char * caminho){
 		root=strncpy(root,name,indice);
 		root[indice]='\0';
 	}
-	//TODO checar root de acordo com 1a classe, ajustar se necessário!
+	//TODO checar root de acordo com 1a classe, ajustar se necessï¿½rio!
 	//TODO NoClassDefFoundError, ClassCircularityError,IncompatibleClassChangeError
 
 	else{

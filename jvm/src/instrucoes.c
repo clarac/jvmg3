@@ -1,12 +1,12 @@
-#include <stack.h>
-#include <util.h>
+#include "stack.h"
+#include "util.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <heap.h>
-#include <main.h>
+#include "heap.h"
+#include "main.h"
 #include <string.h>
-#include <classloader.h>
-#include <instrucoes.h>
+#include "classloader.h"
+#include "instrucoes.h"
 
 struct code * cptr;
 
