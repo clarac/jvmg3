@@ -1670,6 +1670,12 @@ void invokespecial(){
 	char * className;
 
 	//struct Object * obj =(struct Object *) pop();
+	className=getMethodClassName(mainClass,index);
+
+	if(strcmp(className,"java/lang/Object")==0){
+		pop();
+		return;
+	}
 
 	m = getMethodByCPIndex(mainClass,index);
 	if(m->code->code_l<2){
@@ -1677,11 +1683,7 @@ void invokespecial(){
 		return;
 	}
 
-	className=getMethodClassName(mainClass,index);
-	if(strcmp(className,"java/lang/Objetc")==0){
-		pop();
-		return;
-	}
+
 	newFrame(m,1);
 	push((unsigned int)curObj,0);
 	push(pc,0);
@@ -1824,6 +1826,7 @@ void invokevirtual(){
 				printf("%c",c);
 				break;
 			case 'S':
+			case 'L':
 				str = (char *) pop();
 				printf("%s",str);
 				break;

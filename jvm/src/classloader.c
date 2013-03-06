@@ -801,7 +801,7 @@ struct class * getClass(char *pathname){
 	thisc->a_count=pru2(bc,0);
 	thisc->atts=readAtts(thisc->a_count,bc,thisc->cpc,thisc->cpool,NULL);
 
-	printf("carregou %s com sucesso\n",thisc->name);
+	//printf("carregou %s com sucesso\n",thisc->name);
 	//printClass(thisc);
 	/*if(mainClass==NULL && strcmp(name,pathname)!=0){
 		int tamName, tamRoot, tamPath, tamRootFix;

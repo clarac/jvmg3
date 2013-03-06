@@ -26,7 +26,7 @@ void createHeap(){
 	objects_count = 0;
 	array_count = 0;
 	used_heap_size = 0;
-	printf("Heap was created.\n");
+	//printf("Heap was created.\n");
 }
 void verifyHeapSpace(){
 	if (used_heap_size >= heap_min_size){
