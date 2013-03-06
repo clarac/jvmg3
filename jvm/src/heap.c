@@ -5,6 +5,7 @@
 #include "heap.h"
 
 
+
 //Definicao do tamanho maximo da heap, o padrao do Java eh 128mb, dividi por 10 pra demorar menos pra compilar, depois retorna ao valor anterior.
 #define HEAP_SIZE (134217728/5)
 

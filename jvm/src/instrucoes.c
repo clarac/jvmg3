@@ -678,7 +678,7 @@ void caload(){
 		printf("ArrayVarOutOfBoundsException\n");
 		exit(EXIT_FAILURE);
 	}
-	push(a->arrayref[i],'A');
+	push(a->arrayref[i],'C');
 
 }
 
@@ -738,7 +738,7 @@ void iaload(){
 		printf("ArrayVarOutOfBoundsException\n");
 		exit(EXIT_FAILURE);
 	}
-	push(a->arrayref[i],'A');
+	push(a->arrayref[i],'I');
 
 }
 
@@ -772,7 +772,7 @@ void faload(){
 		printf("ArrayVarOutOfBoundsException\n");
 		exit(EXIT_FAILURE);
 	}
-	push(a->arrayref[i],'A');
+	push(a->arrayref[i],'F');
 
 }
 
@@ -813,7 +813,6 @@ void daload(){
 
 void dastore(){
 	double d=popDbl();
-	printf("%lf\n", d);
 	unsigned int i=pop();
 	struct Array *a;
 	a = popArray();
@@ -1338,19 +1337,19 @@ void getstatic(){
 void ldc(){
 /*
  * The index is an unsigned byte that must be a valid index into the run-time constant pool of the
- * current class (§2.6). The run-time constant pool entry at index either must be a run-time constant
+ * current class (ï¿½2.6). The run-time constant pool entry at index either must be a run-time constant
  * of type int or float, or a reference to a string literal, or a symbolic reference to a class,
- * method type, or method handle (§5.1).
+ * method type, or method handle (ï¿½5.1).
 If the run-time constant pool entry is a run-time constant of type int or float, the numeric value
 of that run-time constant is pushed onto the operand stack as an int or float, respectively.
 Otherwise, if the run-time constant pool entry is a reference to an instance of class String
-representing a string literal (§5.1), then a reference to that instance, value, is pushed onto
+representing a string literal (ï¿½5.1), then a reference to that instance, value, is pushed onto
 the operand stack.
-Otherwise, if the run-time constant pool entry is a symbolic reference to a class (§5.1), then the
-named class is resolved (§5.4.3.1) and a reference to the Class object representing that class, value,
+Otherwise, if the run-time constant pool entry is a symbolic reference to a class (ï¿½5.1), then the
+named class is resolved (ï¿½5.4.3.1) and a reference to the Class object representing that class, value,
 is pushed onto the operand stack.
 Otherwise, the run-time constant pool entry must be a symbolic reference to a method type or a
-method handle (§5.1). The method type or method handle is resolved (§5.4.3.5) and a reference to
+method handle (ï¿½5.1). The method type or method handle is resolved (ï¿½5.4.3.5) and a reference to
 the resulting instance of java.lang.invoke.MethodType or java.lang.invoke.MethodHandle, value,
 is pushed onto the operand stack.
  *
@@ -1401,10 +1400,10 @@ void ldc_w(){
 void ldc2_w(){
 	/*
 	 * The unsigned indexbyte1 and indexbyte2 are assembled into an unsigned 16-bit index into
-	 * the run-time constant pool of the current class (§2.6), where the value of the index is
+	 * the run-time constant pool of the current class (ï¿½2.6), where the value of the index is
 	 * calculated as (indexbyte1 << 8) | indexbyte2. The index must be a valid index into the
 	 * run-time constant pool of the current class. The run-time constant pool entry at the
-	 * index must be a run-time constant of type long or double (§5.1). The numeric value of
+	 * index must be a run-time constant of type long or double (ï¿½5.1). The numeric value of
 	 * that run-time constant is pushed onto the operand stack as a long or double, respectively.
 	 */
 	struct item *a;
@@ -1572,7 +1571,7 @@ void baload(){
 		printf("ArrayVarOutOfBoundsException\n");
 		exit(EXIT_FAILURE);
 	}
-	push(a->arrayref[i],'A');
+	push(a->arrayref[i],'B');
 
 }
 
@@ -1606,7 +1605,7 @@ void saload(){
 		printf("ArrayVarOutOfBoundsException\n");
 		exit(EXIT_FAILURE);
 	}
-	push(((short *)a->arrayref)[i],'A');
+	push(((short *)a->arrayref)[i],'S');
 
 }
 
@@ -1796,6 +1795,7 @@ void invokevirtual(){
 	struct method * m;
 	char * className, *mName, tipo, *desc;
 	char * str;
+	char c;
 	struct item * i = mainClass->cpool[index-1];
 	//className=getMethodClassName(current,index);
 	//mName=getMethodNameByCPIndex(current,index);
@@ -1809,8 +1809,8 @@ void invokevirtual(){
 		tipo = getTipo();
 		switch (tipo){
 			case 'C':
-				str = pop();
-				printf("%c",str[0]);
+				c = pop();
+				printf("%c",c);
 				break;
 			case 'S':
 				str = (char *) pop();
@@ -1832,11 +1832,7 @@ void invokevirtual(){
 				break;
 			case 'B':
 				a = pop();
-				if(a==0)
-					printf("false");
-				else
-					printf("true");
-				break;
+				printf("%d", a);
 		}
 		if(strcmp(mName,"println")==0)
 			printf(" \n");
