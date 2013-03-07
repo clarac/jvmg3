@@ -426,7 +426,8 @@ void printClass(struct class * thisc){
 
 	printf("methods_count : %u\n",thisc->m_count);
 	printMethods(thisc->m_count,thisc->methods);
-	printf("attributes_count : %u\n",thisc->a_count);
+
+	printf("\nattributes_count : %u\n",thisc->a_count);
 	printAtts(thisc->a_count,thisc->atts);
 }
 

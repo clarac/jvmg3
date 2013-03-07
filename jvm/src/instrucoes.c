@@ -1805,7 +1805,7 @@ void invokevirtual(){
 	char * className, *mName, tipo, *desc;
 	char * str;
 	char c;
-	struct item * i = mainClass->cpool[index-1];
+	struct item * i = current->cpool[index-1];
 	//className=getMethodClassName(current,index);
 	//mName=getMethodNameByCPIndex(current,index);
 	className = i->class;
