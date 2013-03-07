@@ -23,13 +23,14 @@ void executaMetodo(struct method * m){
 
 	encerrou = 0;
 
-	while(pc<cod->code_l && encerrou == 0){
+	while(pc<cod->code_l && encerrou == 0 ){
 		encerrou = 0;
 		pcInc = 1;
 		op=getLastByte(cod->code[pc]);
 		//printf("chamando instrucao 0x%X (%d)\n",op,op);
 		chamaInst(op,cod);
 		pc+=pcInc;
+
 	}
 	encerrou=0;
 
@@ -89,6 +90,14 @@ int main(int argc, char *argv[]){
 		printf("Informe o arquivo .class\n");
 		return 1;
 	}
+	if(argc>2){
+		if(strcmp(argv[2],"view")==0){
+			imprimeClasse=1;
+			getFirst(argv[1]);
+			return 0;
+		}
+	}
+	imprimeClasse=0;
 	createHeap();
 	erroMsg=NULL;
 	current=getFirst(argv[1]);

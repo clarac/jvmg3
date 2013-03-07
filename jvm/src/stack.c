@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "stack.h"
 #include "util.h"
 #include "heap.h"
@@ -96,7 +97,7 @@ void newFrame(struct method * m, int objref){
 	checa(local);
 	local[0]=m->code->max_locals;
 
-	int i,v;
+	int i,v, count=0;
 	unsigned int a,b;
 	i=1;
 	v=local[0];
@@ -112,16 +113,25 @@ void newFrame(struct method * m, int objref){
 	}
 	i--;
 	for(;i>0 && v>0 && m->descriptor[i]!=';' && m->descriptor[i]!='[' && m->descriptor[i]!='L';i--,v--){
+		count++;
 		switch(m->descriptor[i]){
 			case 'D':
 			case 'J':
-				b=pop();
-				a=pop();
-				local[v-1]=a;
-				local[v]=b;
-				//setLocalVar(v,a);
-				//setLocalVar(v+1,b);
-				v--;
+				if(m->descriptor[i-1]!='['){
+					b=pop();
+					a=pop();
+					local[v-1]=a;
+					local[v]=b;
+					//setLocalVar(v,a);
+					//setLocalVar(v+1,b);
+					v--;
+					count++;
+				} else{
+					a=pop();
+					local[v]=a;
+					//setLocalVar(v,a);
+					break;
+				}
 				break;
 			default:
 				a=pop();
@@ -130,9 +140,20 @@ void newFrame(struct method * m, int objref){
 				break;
 		}
 	}
-	if(objref==1)
+	if(objref==1){
 		local[1] = pop();
-
+		if(v>1){
+			v++;
+			for(i=2;i<(count+2);i++,v++){
+				local[i]=local[v];
+			}
+		}
+	} else if(v>0){
+		v++;
+		for(i=1;i<(count+1);i++,v++){
+			local[i]=local[v];
+		}
+	}
 	push((unsigned int) base,0);
 	push((unsigned int) local,0);
 	//printf("local=0x%X\n",(unsigned int)local);

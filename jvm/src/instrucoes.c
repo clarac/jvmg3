@@ -158,7 +158,7 @@ void aastore(){
 
 
 void aconst_null (){
-	push(0,'C');
+	push(0,'A');
 }
 
 void dadd(){
@@ -367,27 +367,27 @@ void aaload(){
 void aload(){
 	unsigned int index = getByte();
 	unsigned int a = getLocalVar(index);
-	push(a,'C');
+	push(a,'A');
 }
 
 void aload_0(){
 	unsigned int a = getLocalVar(0);
-	push(a,'C');
+	push(a,'A');
 }
 
 void aload_1(){
 	unsigned int a = getLocalVar(1);
-	push(a,'C');
+	push(a,'A');
 }
 
 void aload_2(){
 	unsigned int a = getLocalVar(2);
-	push(a,'C');
+	push(a,'A');
 }
 
 void aload_3(){
 	unsigned int a = getLocalVar(3);
-	push(a,'C');
+	push(a,'A');
 }
 
 void astore(){
@@ -729,12 +729,8 @@ void iaload(){
 	unsigned int i=pop();
 	struct Array *a;
 	a = popArray();
-	if (a->arrayref == NULL){
-		printf("NullPointerException\n");
-		exit(EXIT_FAILURE);
-	}
+	checa(a);
 	if (i>=a->length){
-
 		printf("ArrayVarOutOfBoundsException\n");
 		exit(EXIT_FAILURE);
 	}
@@ -1319,8 +1315,9 @@ void getstatic(){
 	struct class *c;
 	struct field *f;
 	if(a->tag==9){ //field
-		if(strcmp(a->name_and_type->name,"out")==0 &&  (strcmp(a->class,"java/lang/System")==0 || strcmp(a->class,"java\\lang\\System")==0))
+		if(strcmp(a->name_and_type->name,"out")==0 &&  (strcmp(a->class,"java/lang/System")==0 || strcmp(a->class,"java\\lang\\System")==0)){
 			return; // nao ir pegar se for pra impressao
+		}
 		c = getClass(a->class);
 		f = getField(c,a->name_and_type->name);
 		if((f->aflags & 0x8)!=0 ){ //testa se eh estatica
@@ -1786,8 +1783,7 @@ void putfield(){
 	unsigned int vh;
 	struct Object * obj;
 	char * descriptor;
-	obj = getLocalVar(0);
-	descriptor = obj->instance->cpool[index-1]->name_and_type->descriptor;
+	descriptor = current->cpool[index-1]->name_and_type->descriptor;
 
 	if(strcmp(descriptor,"D")==0 || strcmp(descriptor,"J")==0 ){ // double ou long
 		vh = pop();
@@ -1819,34 +1815,37 @@ void invokevirtual(){
 
 	}
 	else if(strcmp(className,"java/io/PrintStream")==0 || strcmp(className,"java\\io\\PrintStream")==0){
-		tipo = getTipo();
-		switch (tipo){
-			case 'C':
-				c = pop();
-				printf("%c",c);
-				break;
-			case 'S':
-			case 'L':
-				str = (char *) pop();
-				printf("%s",str);
-				break;
-			case 'I':
-				a = pop();
-				printf("%d",a);
-				break;
-			case 'F':
-				a = pop();
-				printf("%f",toFloat(a));
-				break;
-			case 'D':
-				printf("%f",popDbl());
-				break;
-			case 'J':
-				printf("%lld",popLong());
-				break;
-			case 'B':
-				a = pop();
-				printf("%d", a);
+		if(desc[1]!=')'){
+			tipo = getTipo();
+			switch (tipo){
+				case 'C':
+					c = pop();
+					printf("%c",c);
+					break;
+				case 'S':
+				case 'L':
+					str = (char *) pop();
+					printf("%s",str);
+					break;
+				case 'I':
+					a = pop();
+					printf("%d",a);
+					break;
+				case 'F':
+					a = pop();
+					printf("%.10g",toFloat(a));
+					break;
+				case 'D':
+					printf("%.15g",popDbl());
+					break;
+				case 'J':
+					printf("%lld",popLong());
+					break;
+				case 'B':
+					a = pop();
+					printf("%d", a);
+					break;
+			}
 		}
 		if(strcmp(mName,"println")==0)
 			printf(" \n");

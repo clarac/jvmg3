@@ -112,9 +112,9 @@ int printItems(struct item **pdc, int tam){
 	unsigned int ui;
 
 	paux=pdc;							// iterator para o vetor
-
+	printf("\nPool de constantes: \n");
 	for(i=1;i<tam;i++,paux++){			// percorre enquanto nao chegou ao final
-
+		printf("#%d:\n",i);
 		atual=*paux;					// pega proximo item
 
 		tag = (int) atual->tag;
@@ -256,25 +256,37 @@ void setStrings(struct item **pdc, int tam){
 	}
 }
 
+
+
 void printAtts(unsigned int count, struct attribute ** atts){
 	int j,k;
 	struct attribute *att;
 	char *str;
 	for(j=0;j<count;j++,atts++){
 		att=*atts;
-
-		printf(">>>attribute #%d : %u (%s)\n",j,att->name_i,att->name);
-		printf(">>>attribute_length : %u\n",att->length);
-		printf(">>>info : ");
+		if(strcmp(att->name,"Code")==0){
+			return;
+		}
+		printf("attribute #%d : %u (%s)\n",j,att->name_i,att->name);
+		printf("attribute_length : %u\n",att->length);
+		printf("info : ");
 		str=att->info;
 		for(k=0;k<att->length;k++,str++){
-			printf("%X ",*str);
+			printf("%X ",getLastByte(*str));
 		}
 		printf("\n");
 	}
 }
 
-
+void printCode(struct code* code){
+	printf("\nCode: \n");
+	printf("Length: %d\n",code->length);
+	printf("Max stack: %d\n",code->max_stack);
+	printf("Max locals: %d\n",code->max_locals);
+	printf("Code length: %d\n",code->code_l);
+	printf("Attribute count: %d\n",code->att_c);
+	printAtts(code->att_c, code->atts);
+}
 
 struct attribute ** readAtts(unsigned int count, FILE * bc, unsigned int cpc, struct item ** pdc, struct code **c){
 	struct attribute **atts, *att, **first;
@@ -372,16 +384,18 @@ void printFields(unsigned int count, struct field ** fds){
 void printMethods(unsigned int count, struct method ** mtds){
 	int i;
 	struct method *mtd;
+
 	for(i=0;i<count;i++, mtds++){
 		mtd=*mtds;
-		printf(">method #%d\n",i);
-		printf(">>access_flags : %u\n",mtd->aflags);
+		printf("\n");
+		printf("method #%d\n",i);
+		printf("access_flags : %u\n",mtd->aflags);
 
-		printf(">>name_index : %u (%s)\n",mtd->name_i,mtd->name);
+		printf("name_index : %u (%s)\n",mtd->name_i,mtd->name);
 
-		printf(">>descriptor_index : %u (%s)\n",mtd->descriptor_i,mtd->descriptor);
-		printf(">>attributes_count : %u\n",mtd->a_count);
-
+		printf("descriptor_index : %u (%s)\n",mtd->descriptor_i,mtd->descriptor);
+		printf("attributes_count : %u\n",mtd->a_count);
+		printCode(mtd->code);
 		printAtts(mtd->a_count,mtd->atts);
 
 	}
@@ -394,7 +408,7 @@ void printClass(struct class * thisc){
 	printf("constant_pool_count : %u\n\n",thisc->cpc);
 	printf("access_flags : 0x%X\n",thisc->aflags);
 	printf("this_class : %u (%s)\n",thisc->this_c, thisc->name);
-	printf("super_class : %u (-)\n",thisc->super_c);
+	printf("super_class : %u (%s)\n",thisc->super_c, thisc->supername);
 
 	printItems(thisc->cpool, thisc->cpc);
 
@@ -453,8 +467,6 @@ struct method * tryMethod(struct class * c, char * name, char * descriptor){
 			return c->methods[i];
 		}
 	}
-	if(c->super!=NULL)
-		return getMethod(c->super,name, descriptor);
 	//printf("%s\n%s\n",name, descriptor);
 	return NULL;
 }
@@ -802,7 +814,10 @@ struct class * getClass(char *pathname){
 	thisc->atts=readAtts(thisc->a_count,bc,thisc->cpc,thisc->cpool,NULL);
 
 	//printf("carregou %s com sucesso\n",thisc->name);
-	//printClass(thisc);
+	if(imprimeClasse==1){
+		printClass(thisc);
+		return NULL;
+	}
 	/*if(mainClass==NULL && strcmp(name,pathname)!=0){
 		int tamName, tamRoot, tamPath, tamRootFix;
 		tamName=strlen(thisc->name);
@@ -816,15 +831,14 @@ struct class * getClass(char *pathname){
 		mainClass=thisc;
 	fclose(bc);
 	if(strcmp(thisc->supername,"java/lang/Object")==0){
-		thisc->super_c=NULL;
+		thisc->super_c=0;
 	}
-	if(thisc->super_c!=NULL){
+	if(thisc->super_c!=0){
 		i=strlen(root)+ strlen(thisc->supername)+6;
-		if(i>500)
-			name=(char *)realloc(name,i+100);
+		name=(char *)realloc(name,strlen(thisc->supername)+7);
 		checa(name);
 		strcpy(name,thisc->supername);
-		strcat(name,".class\0");
+		strcat(name,".class");
 		thisc->super=getClass(name);
 	}
 	iniciaClasse(thisc);
