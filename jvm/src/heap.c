@@ -109,10 +109,10 @@ struct Array * createNewArray(unsigned int num_itens, unsigned int type){
 		case 4: //boolean
 		case 5: //char
 		case 8: //byte
-			size = 1;
+			size = 4;
 			break;
 		case 9: //short
-			size = 2;
+			size = 4;
 			break;
 		case 6: //float
 		case 10: //int
@@ -121,6 +121,9 @@ struct Array * createNewArray(unsigned int num_itens, unsigned int type){
 		case 11: //long
 		case 7: //double
 			size = 8;
+			break;
+		default:
+			size = 4;
 			break;
 	}
 
@@ -131,7 +134,7 @@ struct Array * createNewArray(unsigned int num_itens, unsigned int type){
 	arrays.id = array_count;
 	array_item->arrayref = new_array;
  	array_item->length = num_itens;
- 	arrays.array_element = &array_item;
+ 	arrays.array_element = array_item;
  	arrays.size = size;
  	array_count++;
 

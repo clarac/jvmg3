@@ -1311,7 +1311,7 @@ void putstatic(){
 
 void getstatic(){
 	unsigned int index = getShort();
-	struct item * a = mainClass->cpool[index-1];
+	struct item * a = current->cpool[index-1];
 	struct class *c;
 	struct field *f;
 	if(a->tag==9){ //field
@@ -1603,7 +1603,7 @@ void saload(){
 		printf("ArrayVarOutOfBoundsException\n");
 		exit(EXIT_FAILURE);
 	}
-	push(((short *)a->arrayref)[i],'S');
+	push(((short *)a->arrayref)[i],'I');
 
 }
 

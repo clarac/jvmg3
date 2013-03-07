@@ -342,7 +342,7 @@ struct code * readCode(FILE * bc, unsigned int cpc, struct item ** pdc){
 	cod->max_locals=pru2(bc,0);
 	cod->code_l=pru4(bc);
 
-	cod->code=calloc(cod->code_l,sizeof(char));
+	cod->code=calloc(cod->code_l+4,sizeof(char));
 	checa(cod);
 	for(j=0;j<cod->code_l;j++){
 		l=leChar(bc);

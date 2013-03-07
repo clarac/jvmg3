@@ -12,7 +12,7 @@
 
 
 #include <stdint.h>
-#include <heap.h>
+#include "heap.h"
 
 unsigned int pop();
 void  push(unsigned int valor, char c);

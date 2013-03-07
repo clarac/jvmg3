@@ -8,8 +8,8 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
-#include <tipos.h>
-#include <heap.h>
+#include "tipos.h"
+#include "heap.h"
 #include <stdlib.h>
 
 struct class * current, *mainClass;

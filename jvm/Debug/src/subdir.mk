@@ -3,6 +3,14 @@
 ################################################################################
 
 # Add inputs and outputs from these tool invocations to the build variables 
+O_SRCS += \
+../src/classloader.o \
+../src/heap.o \
+../src/instrucoes.o \
+../src/main.o \
+../src/stack.o \
+../src/util.o 
+
 C_SRCS += \
 ../src/classloader.c \
 ../src/heap.c \

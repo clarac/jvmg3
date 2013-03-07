@@ -101,10 +101,10 @@ int main(int argc, char *argv[]){
 	createHeap();
 	erroMsg=NULL;
 	current=getFirst(argv[1]);
-	mainClass=current;
+	//mainClass=current;
 	checa(current);
 	struct method * m;
-	iniciaClasse(current);
+	//iniciaClasse(current);
 
 	m = getMethod(current,"main","([Ljava/lang/String;)V");
 	newFrame(m,0);
